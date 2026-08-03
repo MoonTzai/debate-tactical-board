@@ -8,6 +8,7 @@
 :root{--bg:#f5f5f5;--card:#fff;--border:#e0e0e0;--input:#f0f0f0;--gold:#4f6bed;--text:#222;--gray:#666;--dark-gray:#999;--red:#e53935;--green:#2ea86b;--blue:#4f8fd6;--grid:#e4e4e4;--hover:#fafafa;--shadow:rgba(0,0,0,.08)}
 body.dark{--bg:#0d0d0d;--card:#141414;--border:#262626;--input:#1a1a1a;--gold:#ffc000;--text:#eee;--gray:#999;--dark-gray:#555;--red:#ee5555;--green:#6ecd71;--blue:#4fa8ee;--grid:#1e1e1e;--hover:#1b1b1b;--shadow:rgba(0,0,0,.35)}
 *{margin:0;padding:0;box-sizing:border-box}
+html{height:100%;overflow:hidden}
 body{background:var(--bg);color:var(--text);font-family:'Microsoft YaHei','PingFang SC',sans-serif;height:100vh;height:100dvh;display:flex;flex-direction:column;overflow:hidden}
 body{-webkit-tap-highlight-color:transparent}
 button{font-family:inherit}
@@ -1725,7 +1726,7 @@ function debounceViewSave(){clearTimeout(viewTimer);viewTimer=setTimeout(save,40
 
 /* ================= 编辑状态 ================= */
 function caretEnd(el){
-  el.focus();
+  try{el.focus({preventScroll:true});}catch(e){el.focus();}
   try{
     var r=document.createRange();r.selectNodeContents(el);r.collapse(false);
     var s=window.getSelection();s.removeAllRanges();s.addRange(r);
@@ -1901,6 +1902,23 @@ function onPD(e){
     var pts=Array.from(pointers.values());
     pinch={cx0:(pts[0].x+pts[1].x)/2,cy0:(pts[0].y+pts[1].y)/2,d0:Math.hypot(pts[0].x-pts[1].x,pts[0].y-pts[1].y),s0:view.scale};
     return;
+  }
+  if(window.__diagPointer){
+    window.__diagPointer=false;
+    var _r=document.getElementById('stage').getBoundingClientRect();
+    var _w=document.getElementById('world').getBoundingClientRect();
+    var _c0=board.cards[0];
+    var _e0=document.querySelector('#cardLayer .card');
+    if(window.console)console.warn('[pointer-diag]',JSON.stringify({
+      clientX:e.clientX,clientY:e.clientY,target:(t&&(t.id||t.className||t.tagName))||'?',
+      stage:{l:_r.left,t:_r.top},world:{l:_w.left,t:_w.top},
+      view:{x:view.x,y:view.y,s:view.scale},css:document.getElementById('world').style.transform,
+      alignOffset:alignOffset,
+      card0:_c0?{x:_c0.x,y:_c0.y,id:_c0.id.slice(0,8)}:null,
+      card0Rect:_e0?{l:Math.round(_e0.getBoundingClientRect().left),t:Math.round(_e0.getBoundingClientRect().top)}:null,
+      dpr:devicePixelRatio,innerW:innerWidth,innerH:innerHeight,scrollY:window.scrollY,
+      visualScale:window.visualViewport?window.visualViewport.scale:null
+    }));
   }
   var t=e.target;
   var linkEl=t.closest?t.closest('[data-link-id]'):null;
