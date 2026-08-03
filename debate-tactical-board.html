@@ -56,7 +56,7 @@ body.dark .tb.on{color:#000}
 /* ---------- stage / world ---------- */
 #stage{flex:1;position:relative;overflow:hidden;background:var(--bg);touch-action:none;min-width:0}
 #stage.text-mode{cursor:crosshair}
-#world{position:absolute;left:0;top:0;width:20000px;height:20000px;pointer-events:none;transform-origin:0 0;background-image:radial-gradient(circle,var(--grid) 1.2px,transparent 1.3px);background-size:24px 24px}
+#world{position:absolute;left:0;top:0;width:8192px;height:8192px;pointer-events:none;transform-origin:0 0;will-change:transform;background-image:radial-gradient(circle,var(--grid) 1.2px,transparent 1.3px);background-size:24px 24px}
 #svgLinks{position:absolute;left:0;top:0;width:20000px;height:20000px;overflow:visible;pointer-events:none}
 #svgLinks .link-hit{pointer-events:stroke}
 #svgLinks rect[data-link-id]{pointer-events:all;cursor:pointer}
@@ -668,18 +668,49 @@ function redo(){
 }
 /* ================= 渲染 ================= */
 var renderBusy=false, renderQueued=false, alignOffset={x:0,y:0}, lastAlignWarn=0;
-function measureAlignOffset(){
-  var c0=board.cards[0];
-  var el0=document.querySelector('#cardLayer .card');
-  if(!c0||!el0){alignOffset={x:0,y:0};return;}
+function ensureWorldSize(){
+  var maxX=0,maxY=0,minX=1e9,minY=1e9;
+  board.cards.forEach(function(c){
+    maxX=Math.max(maxX,c.x+cardW(c));maxY=Math.max(maxY,c.y+(cardH[c.id]||90));
+    minX=Math.min(minX,c.x);minY=Math.min(minY,c.y);
+  });
+  board.texts.forEach(function(t){
+    var sz=textSizes[t.id]||{w:160,h:40};
+    maxX=Math.max(maxX,t.x+sz.w);maxY=Math.max(maxY,t.y+sz.h);
+    minX=Math.min(minX,t.x);minY=Math.min(minY,t.y);
+  });
+  board.shapes.forEach(function(s){
+    if(s.kind==='line'){maxX=Math.max(maxX,s.x1,s.x2);maxY=Math.max(maxY,s.y1,s.y2);minX=Math.min(minX,s.x1,s.x2);minY=Math.min(minY,s.y1,s.y2);}
+    else{maxX=Math.max(maxX,s.x+(s.w||0));maxY=Math.max(maxY,s.y+(s.h||0));minX=Math.min(minX,s.x);minY=Math.min(minY,s.y);}
+  });
+  var need=Math.max(2000,Math.max(maxX-minX,maxY-minY)+1000);
+  var w=$('#world');
+  var cur=parseInt(w.style.width,10)||8192;
+  var target=8192;
+  while(target<need&&target<32768)target*=2;
+  if(target!==cur){w.style.width=target+'px';w.style.height=target+'px';}
+}
+function refreshAlignOffset(){
+  if(!board||!board.cards.length){alignOffset={x:0,y:0};return;}
+  var ref=board.cards[0];
+  if(drag&&drag.items&&drag.items.length){
+    for(var i=0;i<board.cards.length;i++){
+      var dc=board.cards[i];
+      var isDrag=drag.items.some(function(it){return it.kind==='card'&&it.id===dc.id;});
+      if(!isDrag){ref=dc;break;}
+    }
+  }
+  var el0=document.querySelector('#cardLayer .card[data-id="'+ref.id+'"]');
+  if(!el0){alignOffset={x:0,y:0};return;}
   var d=el0.getBoundingClientRect();
   var o=stageOrigin();
-  var fx=o.x+view.x+c0.x*view.scale;
-  var fy=o.y+view.y+c0.y*view.scale;
+  var fx=o.x+view.x+ref.x*view.scale;
+  var fy=o.y+view.y+ref.y*view.scale;
   var nx=Math.round(d.left-fx), ny=Math.round(d.top-fy);
   if(Math.abs(nx)>3000||Math.abs(ny)>3000)return;
   alignOffset={x:nx,y:ny};
 }
+function measureAlignOffset(){refreshAlignOffset();}
 function checkRenderAlignment(){
   if(!board||!board.cards.length)return;
   var el0=document.querySelector('#cardLayer .card');
@@ -714,6 +745,7 @@ function render(){
     try{renderCards();}catch(err){if(window.console)console.error('renderCards:',err);}
     try{renderTexts();}catch(err){if(window.console)console.error('renderTexts:',err);}
     try{renderLinks();}catch(err){if(window.console)console.error('renderLinks:',err);}
+    ensureWorldSize();
     updateView();
     updateStatus();
     measureAlignOffset();
@@ -727,7 +759,8 @@ function render(){
 }
 function updateView(){
   var w=$('#world');
-  w.style.transform='translate('+view.x+'px,'+view.y+'px) scale('+view.scale+')';
+  w.style.transform='translate3d('+view.x+'px,'+view.y+'px,0) scale('+view.scale+')';
+  void w.offsetHeight;
   var modeName=mode==='text'?t('textModeT'):mode==='shape'?(t('shapeModeT')+'·'+(shapeKind==='rect'?t('rectName'):shapeKind==='ellipse'?t('ellipseName'):t('lineName'))):t('selectMode');
   $('#statRight').textContent=Math.round(view.scale*100)+'% · '+modeName;
 }
@@ -1572,10 +1605,12 @@ function togglePanel(){
   }
 }
 function screenToWorld(cx,cy){
+  refreshAlignOffset();
   var r=$('#stage').getBoundingClientRect();
   return {x:(cx-r.left-view.x-alignOffset.x)/view.scale, y:(cy-r.top-view.y-alignOffset.y)/view.scale};
 }
 function worldToScreen(x,y){
+  refreshAlignOffset();
   var r=$('#stage').getBoundingClientRect();
   return {x:r.left+view.x+x*view.scale+alignOffset.x, y:r.top+view.y+y*view.scale+alignOffset.y};
 }
@@ -2260,6 +2295,7 @@ function updateTextEl(t){
 
 /* ---------- 悬停 0.5s 自动连线 ---------- */
 function cardScreenRect(c){
+  refreshAlignOffset();
   var h=cardH[c.id]||90;
   var o=stageOrigin();
   return {l:o.x+view.x+c.x*view.scale+alignOffset.x,t:o.y+view.y+c.y*view.scale+alignOffset.y,r:o.x+view.x+(c.x+cardW(c))*view.scale+alignOffset.x,b:o.y+view.y+(c.y+h)*view.scale+alignOffset.y};
