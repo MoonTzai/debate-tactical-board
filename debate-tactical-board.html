@@ -362,7 +362,7 @@ var I18N={
   quickAddLabel:['快速建卡','Quick Add'], filterType:['筛选类型','Filter type'], clearFilter:['清除筛选','Clear filters'],
   untyped:['未分类','Untyped'], filterRole:['筛选辩位','Filter role'],
   newCardT:['新建卡片 (N)','New card (N)'], textT:['自由文本 (T)','Text (T)'],
-  rectT:['矩形框：点按拖拽绘制','Rectangle: drag to draw'], ellipseT:['圆/椭圆框：点按拖拽绘制','Ellipse: drag to draw'], lineT:['直线：点按拖拽绘制','Line: drag to draw'],
+  rectT:['矩形 (R)：拖拽绘制，单击空白退出','Rectangle (R): drag to draw, click empty to exit'], ellipseT:['圆/椭圆 (C)：拖拽绘制，单击空白退出','Ellipse (C): drag to draw, click empty to exit'], lineT:['直线 (L)：拖拽绘制，双击直线切换箭头','Line (L): drag to draw, double-click to cycle arrows'],
   undo:['撤销 (Ctrl+Z)','Undo (Ctrl+Z)'], redo:['重做 (Ctrl+Y)','Redo (Ctrl+Y)'], fitT:['适应视图 (F)','Fit view (F)'],
   zoomOut:['缩小 (−)','Zoom out (−)'], zoomIn:['放大 (+)','Zoom in (+)'], checkT:['备赛体检','Prep check'],
   aiT:['AI 整理','AI Organize'], saveT:['保存：本地存档 + 下载 JSON 备份','Save: local + JSON backup'],
@@ -426,7 +426,7 @@ var I18N={
   arrowNone:['无箭头','No arrow'], arrow1:['方向1（旧→新）','Dir 1 (old→new)'], arrow2:['方向2（新→旧）','Dir 2 (new→old)'], arrowBoth:['双向','Both'],
   textModeOn:['文本模式：点击画布放置自由文本，Esc 退出','Text mode: tap the canvas to place text, Esc to exit'],
   textModeOff:['已退出文本模式','Text mode off'],
-  shapeModeOn:['图形模式：在画布拖拽绘制','Shape mode: drag on the canvas to draw '], shapeModeOn2:['（单击=默认大小），Esc 退出',' (click = default size), Esc to exit'],
+  shapeModeOn:['图形模式：在画布拖拽绘制','Shape mode: drag on the canvas to draw '], shapeModeOn2:['（单击空白处退出绘制），Esc 退出',' (click empty to exit), Esc to exit'],
   shapeModeOff:['已退出图形模式','Shape mode off'],
   boardsTitle:['白板管理','Boards'], newBoard:['＋ 新建白板','+ New board'], exportAllJson:['导出全部 JSON','Export all JSON'],
   importJson:['导入 JSON','Import JSON'], allBoards:['全部白板（','All boards ('], allBoards2:['）',')'],
@@ -1282,6 +1282,12 @@ function pShapeDash(v){
   pushUndo();
   s.dash=!!v;save();render();renderPanel();
 }
+function cycleShapeArrow(id){
+  var s=shapeById(id); if(!s||s.kind!=='line')return;
+  pushUndo();
+  s.arrow=(s.arrow+1)%4;
+  save(); render(); renderPanel();
+}
 function pShapeArrow(v){
   var s=selShape();if(!s)return;
   pushUndo();
@@ -1885,7 +1891,12 @@ function onPU(e){
       var it0=drag.items[0];
       if(it0.kind==='card'&&isDoubleTap('card',it0.id,e.clientX,e.clientY)){lastTap=null;enterEdit(it0.id);}
       else if(it0.kind==='text'&&isDoubleTap('text',it0.id,e.clientX,e.clientY)){lastTap=null;enterTextEdit(it0.id);}
-      else if(it0.kind==='shape')lastTap=null;
+      else if(it0.kind==='shape'){
+        var shp=shapeById(it0.id);
+        if(shp&&shp.kind==='line'&&isDoubleTap('shape',it0.id,e.clientX,e.clientY)){lastTap=null;cycleShapeArrow(it0.id);}
+        else if(shp&&shp.kind==='line'){lastTap={kind:'shape',id:it0.id,x:e.clientX,y:e.clientY,t:performance.now()};}
+        else lastTap=null;
+      }
       else lastTap={kind:it0.kind,id:it0.id,x:e.clientX,y:e.clientY,t:performance.now()};
     }else lastTap=null;
     cancelHold();
@@ -1905,19 +1916,23 @@ function onPU(e){
   }else if(drag.mode==='shape-draw'){
     var p=screenToWorld(e.clientX,e.clientY);
     $('#tempShape').innerHTML='';
-    pushUndo();
-    var s;
-    if(!drag.moved){
-      s=defaultShapeAt(drag.kind,p.x,p.y);
-    }else if(drag.kind==='line'){
-      s={id:uid(),kind:'line',x1:drag.sx,y1:drag.sy,x2:p.x,y2:p.y,color:'',dash:false,arrow:0};
-    }else{
-      var x=Math.min(drag.sx,p.x),y=Math.min(drag.sy,p.y);
-      s={id:uid(),kind:drag.kind,x:x,y:y,w:Math.max(12,Math.abs(p.x-drag.sx)),h:Math.max(12,Math.abs(p.y-drag.sy)),color:'',dash:false,arrow:0};
+    var s=null;
+    if(drag.moved){
+      pushUndo();
+      if(drag.kind==='line'){
+        s={id:uid(),kind:'line',x1:drag.sx,y1:drag.sy,x2:p.x,y2:p.y,color:'',dash:false,arrow:0};
+      }else{
+        var x=Math.min(drag.sx,p.x),y=Math.min(drag.sy,p.y);
+        s={id:uid(),kind:drag.kind,x:x,y:y,w:Math.max(12,Math.abs(p.x-drag.sx)),h:Math.max(12,Math.abs(p.y-drag.sy)),color:'',dash:false,arrow:0};
+      }
     }
-    board.shapes.push(s);
-    save();render();
-    sel={kind:'shape',ids:[s.id]};renderPanel();
+    if(s){
+      board.shapes.push(s);
+      save();render();
+      sel={kind:'shape',ids:[s.id]};renderPanel();
+    }else{
+      if(mode==='shape'){mode='select';updateModeUI();updateView();toast(lang==='en'?'Shape mode off':'已退出图形模式');}
+    }
   }else if(drag.mode==='shape-resize'){
     save();render();
   }else if(drag.mode==='card-resize'){
@@ -2390,6 +2405,9 @@ function onKey(e){
     if(sel.kind!=='none'){e.preventDefault();deleteSelection();}
     return;
   }
+  if(e.key==='r'||e.key==='R'){e.preventDefault();toggleShape('rect');return;}
+  if(e.key==='c'||e.key==='C'){e.preventDefault();toggleShape('ellipse');return;}
+  if(e.key==='l'||e.key==='L'){e.preventDefault();toggleShape('line');return;}
   if(e.key==='n'||e.key==='N'){e.preventDefault();newCardAtCenter();return;}
   if(e.key==='t'||e.key==='T'){e.preventDefault();toggleTextMode();return;}
   if(e.key==='f'||e.key==='F'){e.preventDefault();fit();return;}
@@ -3015,7 +3033,7 @@ function openHelp(){
     +'· 卡片底边 ⧉：就地复制（Ctrl+D）<br>'
     +'· 卡片右上角 ×：删除本卡片（悬停或选中时显示，可 Ctrl+Z 撤销）<br>'
     +'· 卡片面板「辩位（执行人）」：标记一/二/三/四辩或自定义，卡片头部显示金色徽标；体检会检查辩位覆盖，筛选栏可按辩位过滤<br>'
-    +'· 工具栏 ▭ / ◯ / ╱：图形模式，在画布<b>拖拽绘制</b>矩形 / 圆椭圆 / 直线（单击=默认大小），Esc 退出；选中后右侧面板可改颜色、虚线；直线支持四种箭头<br>'
+    +'· 工具栏 ▭ / ◯ / ╱（或快捷键 R / C / L）：图形模式，在画布<b>拖拽绘制</b>矩形 / 圆椭圆 / 直线；单击空白处退出绘制；选中后右侧面板可改颜色、虚线，直线支持四种箭头（双击直线快速切换箭头）<br>'
     +'· 工具栏「文」或按 T：文本模式，点击画布放置自由文本（输入完成后自动回到指针模式）<br>'
     +'· 工具栏「存 / 载 / 清」：保存本地存档并下载 JSON 备份、载入 JSON 继续工作、一键清空白板（弹窗确认，可撤销）</div></div>'
     +'<h3>连线</h3><div class="field"><div class="hint">'
@@ -3056,7 +3074,7 @@ function openHelp(){
     +'· ⧉ at the card bottom center: duplicate in place (Ctrl+D)<br>'
     +'· × at the card top-right: delete this card (visible on hover/selection; Ctrl+Z to undo)<br>'
     +'· Card panel "Role (Speaker)": mark 1st/2nd/3rd/4th speaker or custom; a gold badge shows on the card; Prep Check verifies role coverage and the filter bar can filter by role<br>'
-    +'· Toolbar ▭ / ◯ / ╱: shape mode — <b>drag to draw</b> rectangle / ellipse / line (click = default size), Esc to exit; colors, dashes and (for lines) arrows are in the panel<br>'
+    +'· Toolbar ▭ / ◯ / ╱ or shortcuts R / C / L: shape mode — <b>drag to draw</b>; click empty to exit; colors, dashes and (for lines) arrows are in the panel (double-click a line to cycle arrows)<br>'
     +'· Toolbar "文" or T: text mode — click the canvas to place free text (auto returns to pointer mode)<br>'
     +'· Toolbar 存 / 载 / 清: save locally + download JSON backup, load JSON to continue, clear the board (confirmed, undoable)</div></div>'
     +'<h3>Links</h3><div class="field"><div class="hint">'
