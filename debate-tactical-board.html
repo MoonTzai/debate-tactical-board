@@ -98,6 +98,11 @@ body.dark .card .plus-btn{color:#000}
 .card.sel .plus-btn,.card:hover .plus-btn{opacity:1}
 .card.sel .plus-btn,.card:hover .plus-btn{pointer-events:auto}
 .card .plus-btn:hover{background:var(--gold);transform:scale(1.25)}
+.card .dup-btn{position:absolute;left:50%;bottom:-8px;width:16px;height:16px;margin-left:-8px;border-radius:50%;background:var(--dark-gray);color:#fff;font-size:11px;line-height:14px;text-align:center;opacity:0;transition:opacity .15s;cursor:pointer;z-index:3;border:2px solid var(--bg);font-family:"Segoe UI Symbol","Segoe UI","Noto Sans Symbols2","Apple Symbols",sans-serif}
+body.dark .card .dup-btn{color:#000}
+.card .dup-btn{pointer-events:none}
+.card.sel .dup-btn,.card:hover .dup-btn{opacity:1;pointer-events:auto}
+.card .dup-btn:hover{background:var(--gold);transform:scale(1.25)}
 .card .del-btn{position:absolute;top:-9px;right:-9px;width:18px;height:18px;border-radius:50%;background:var(--red);color:#fff;font-size:12px;line-height:15px;text-align:center;opacity:0;pointer-events:none;transition:opacity .15s;cursor:pointer;z-index:3;border:2px solid var(--bg);box-shadow:0 2px 6px var(--shadow)}
 .card.sel .del-btn,.card:hover .del-btn{opacity:1;pointer-events:auto}
 .card .del-btn:hover{transform:scale(1.2);background:#c62828}
@@ -724,6 +729,7 @@ function renderCards(){
       +(c.tags.length?'<div class="c-tags">'+c.tags.map(function(x){return '<span class="c-tag">#'+esc(x)+'</span>';}).join('')+'</div>':'')
       +'<div class="port" title="'+(lang==='en'?'Drag to another card to link':'拖到另一张卡上建立连线')+'"></div>'
       +'<div class="plus-btn" title="'+(lang==='en'?'New linked card':'新建关联卡')+'">＋</div>'
++'<div class="dup-btn" title="'+(lang==='en'?'Duplicate in place (Ctrl+D)':'就地复制（Ctrl+D）')+'">⧉</div>'
       +'<div class="del-btn" title="'+(lang==='en'?'Delete this card':'删除本卡片')+'">×</div>'
       +'<div class="rhandle" title="'+(lang==='en'?'Drag to resize width':'拖动调整宽度')+'"></div>'
       +'</div>';
@@ -1781,6 +1787,7 @@ function onPD(e){
   if(t.closest&&t.closest('.del-btn')&&cardEl){handleDelCard(cardEl);return;}
   if(t.closest&&t.closest('.rhandle')&&cardEl){startCardResize(e,cardEl);return;}
   if(t.closest&&t.closest('.plus-btn')&&cardEl){handlePlus(cardEl);return;}
+  if(t.closest&&t.closest('.dup-btn')&&cardEl){handleDup(cardEl);return;}
   if(t.closest&&t.closest('.port')&&cardEl){startPortDrag(e,cardEl);return;}
   if(cardEl){startCardDrag(e,cardEl);return;}
   if(textEl){startTextDrag(e,textEl);return;}
@@ -2278,6 +2285,11 @@ function handlePlus(cardEl){
   save();render();
   sel={kind:'card',ids:[n.id]};renderPanel();
   enterEdit(n.id);
+}
+
+function handleDup(cardEl){
+  var id=cardEl.dataset.id; if(!cardById(id))return;
+  selectCards([id]); duplicateSelection();
 }
 
 /* ---------- 捏合缩放 ---------- */
@@ -2972,6 +2984,7 @@ function openHelp(){
     +'· <b>按住鼠标中键</b>：在画布任意位置拖动即可平移画面<br>'
     +'· 卡片右侧金色圆点（连接柄）：拖到另一张卡上连线；拖到空白处=新建关联卡<br>'
     +'· 卡片左侧 ＋：新建关联卡并自动连线<br>'
+    +'· 卡片底边 ⧉：就地复制（Ctrl+D）<br>'
     +'· 卡片右上角 ×：删除本卡片（悬停或选中时显示，可 Ctrl+Z 撤销）<br>'
     +'· 卡片面板「辩位（执行人）」：标记一/二/三/四辩或自定义，卡片头部显示金色徽标；体检会检查辩位覆盖，筛选栏可按辩位过滤<br>'
     +'· 工具栏 ▭ / ◯ / ╱：图形模式，在画布<b>拖拽绘制</b>矩形 / 圆椭圆 / 直线（单击=默认大小），Esc 退出；选中后右侧面板可改颜色、虚线；直线支持四种箭头<br>'
@@ -3011,6 +3024,7 @@ function openHelp(){
     +'· <b>Hold the middle mouse button</b> anywhere on the canvas: pan the view<br>'
     +'· Gold dot on a card right edge (connector): drag to another card to link, or to empty space to create a linked card<br>'
     +'· ＋ on the card left edge: create a linked card with an auto link<br>'
+    +'· ⧉ at the card bottom center: duplicate in place (Ctrl+D)<br>'
     +'· × at the card top-right: delete this card (visible on hover/selection; Ctrl+Z to undo)<br>'
     +'· Card panel "Role (Speaker)": mark 1st/2nd/3rd/4th speaker or custom; a gold badge shows on the card; Prep Check verifies role coverage and the filter bar can filter by role<br>'
     +'· Toolbar ▭ / ◯ / ╱: shape mode — <b>drag to draw</b> rectangle / ellipse / line (click = default size), Esc to exit; colors, dashes and (for lines) arrows are in the panel<br>'
