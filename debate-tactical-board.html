@@ -245,7 +245,7 @@ body.dark .tchip.on{color:#000}
   </div>
   <span class="hd-right">
     <button class="btn-sm" onclick="toggleFilterRow()" data-i18n="filter" data-i18n-title="filterTitle">筛选</button>
-    <button class="btn-sm" onclick="openBoards()" data-i18n="boards" data-i18n-title="boardsTitle">白板</button>
+    <button class="btn-sm" onclick="openBoards()" data-i18n="boards" data-i18n-title="boardsTitle">战术板</button>
     <button class="btn-sm" onclick="togglePanel()" data-i18n="panel" data-i18n-title="panelTitle">属性</button>
     <button class="btn-sm" id="btnLang" onclick="toggleLang()" data-i18n="langBtn" title=""></button>
     <button class="btn-sm" id="btnTheme" onclick="toggleTheme()" data-i18n="theme">界面颜色</button>
@@ -357,10 +357,10 @@ function tagName(tg){var k=TAG_KEYS[tg];return k?t(k):tg;}
 /* ================= 双语词典 ================= */
 var I18N={
   titleName:['辩论战术板','Debate Tactical Board'],
-  home:['主页','Home'], homeTitle:['返回工具箱入口','Back to toolbox entry'], filter:['筛选','Filter'], boards:['白板','Boards'], panel:['属性','Panel'], theme:['界面颜色','Theme'],
+  home:['主页','Home'], homeTitle:['返回工具箱入口','Back to toolbox entry'], filter:['筛选','Filter'], boards:['战术板','Boards'], panel:['属性','Panel'], theme:['界面颜色','Theme'],
   filterTitle:['按类型筛选卡片','Filter cards by type'], panelTitle:['显示 / 隐藏属性面板','Show / hide the panel'],
   langBtn:['EN','中'], langZhT:['切换为英文界面','Switch to English UI'], langEnT:['切换为中文界面','Switch to Chinese UI'],
-  searchPh:['搜索卡片 / 文本 (Ctrl+F)','Search cards / text (Ctrl+F)'], boardNamePh:['白板名称','Board name'],
+  searchPh:['搜索卡片 / 文本 (Ctrl+F)','Search cards / text (Ctrl+F)'], boardNamePh:['战术板名称','Board name'],
   quickAddLabel:['快速建卡','Quick Add'], filterType:['筛选类型','Filter type'], clearFilter:['清除筛选','Clear filters'],
   untyped:['未分类','Untyped'], filterRole:['筛选辩位','Filter role'],
   newCardT:['新建卡片 (N)','New card (N)'], textT:['自由文本 (T)','Text (T)'],
@@ -368,7 +368,7 @@ var I18N={
   undo:['撤销 (Ctrl+Z)','Undo (Ctrl+Z)'], redo:['重做 (Ctrl+Y)','Redo (Ctrl+Y)'], fitT:['适应视图 (F)','Fit view (F)'],
   zoomOut:['缩小 (−)','Zoom out (−)'], zoomIn:['放大 (+)','Zoom in (+)'], checkT:['备赛体检','Prep check'],
   aiT:['AI 整理','AI Organize'], saveT:['保存：本地存档 + 下载 JSON 备份','Save: local + JSON backup'],
-  loadT:['载入：导入 JSON 并打开','Load: import JSON'], clearT:['清空当前白板','Clear board'],
+  loadT:['载入：导入 JSON 并打开','Load: import JSON'], clearT:['清空当前战术板','Clear board'],
   exportT:['导出 / 导入','Export / Import'], helpT:['帮助 (?)','Help (?)'],
   statusHint:['双击空白建卡 · 拖卡悬停 0.3s 自动连线 · 滚轮缩放 · 拖空白平移 · ? 帮助','Double-click empty: new card · Hold on a card 0.3s: auto link · Wheel: zoom · Drag empty: pan · ? Help'],
   labelPh:['连线标签','Link label'],
@@ -376,7 +376,7 @@ var I18N={
   rectName:['矩形','Rectangle'], ellipseName:['圆/椭圆','Ellipse'], lineName:['直线','Line'],
   tagFact:['事实层','Fact layer'], tagLogic:['逻辑层','Logic layer'], tagValue:['价值层','Value layer'],
   tagPredicted:['已预判','Predicted'], tagQuestioned:['存疑','Questioned'], tagDefense:['防守','Defense'], tagAttack:['进攻','Attack'],
-  boardSettings:['白板设置','Board Settings'], boardNameF:['白板名称','Board name'], motionF:['辩题','Motion'],
+  boardSettings:['战术板设置','Board Settings'], boardNameF:['战术板名称','Board name'], motionF:['辩题','Motion'],
   sideF:['持方','Side'], formatF:['赛制','Format'], unset:['未定','Unset'], pro:['正方','Pro'], con:['反方','Con'],
   trad:['传辩','Traditional'], oregon:['奥瑞冈','Oregon'], bp:['BP','BP'],
   statsCards:['卡片 ','Cards '], statsLinks:['连线 ','Links '], statsTexts:['文本 ','Texts '], statsDone:['已完成 ','Done '],
@@ -418,23 +418,23 @@ var I18N={
   linked:['已连线','Linked'], autoLinked:['已自动连线：','Auto-linked: '],
   created:['已创建「','Created "'], created2:['」卡','" card'],
   deletedCard:['已删除卡片（Ctrl+Z 可撤销）','Card deleted (Ctrl+Z to undo)'],
-  clearedBoard:['白板已清空（Ctrl+Z 可撤销）','Board cleared (Ctrl+Z to undo)'],
+  clearedBoard:['战术板已清空（Ctrl+Z 可撤销）','Board cleared (Ctrl+Z to undo)'],
   saved:['已保存：本地存档 + JSON 备份文件','Saved: local + JSON backup'],
-  imported:['已导入 ','Imported '], imported2:[' 个白板',' boards'], importFail:['导入失败','Import failed'],
+  imported:['已导入 ','Imported '], imported2:[' 个战术板',' boards'], importFail:['导入失败','Import failed'],
   importBad:['无法识别的 JSON 文件','Unrecognized JSON file'], importErr:['导入失败：文件解析错误','Import failed: parse error'],
-  keepOneBoard:['至少保留一个白板','Keep at least one board'], confirmDelBoard:['确定删除白板「','Delete board "'], confirmDelBoard2:['」？此操作不可恢复。','"? This cannot be undone.'],
-  newBoardOk:['已新建白板','Board created'], copiedBoard:['已复制','Copied'],
-  confirmClear:['确定清空当前白板？全部卡片、连线和文本将被删除（可用 Ctrl+Z 撤销）。','Clear the current board? All cards, links and text will be deleted (Ctrl+Z to undo).'],
+  keepOneBoard:['至少保留一个战术板','Keep at least one board'], confirmDelBoard:['确定删除战术板「','Delete board "'], confirmDelBoard2:['」？此操作不可恢复。','"? This cannot be undone.'],
+  newBoardOk:['已新建战术板','Board created'], copiedBoard:['已复制','Copied'],
+  confirmClear:['确定清空当前战术板？全部卡片、连线和文本将被删除（可用 Ctrl+Z 撤销）。','Clear the current board? All cards, links and text will be deleted (Ctrl+Z to undo).'],
   arrowNone:['无箭头','No arrow'], arrow1:['方向1（旧→新）','Dir 1 (old→new)'], arrow2:['方向2（新→旧）','Dir 2 (new→old)'], arrowBoth:['双向','Both'],
   textModeOn:['文本模式：点击画布放置自由文本，Esc 退出','Text mode: tap the canvas to place text, Esc to exit'],
   textModeOff:['已退出文本模式','Text mode off'],
   shapeModeOn:['图形模式：在画布拖拽绘制','Shape mode: drag on the canvas to draw '], shapeModeOn2:['（单击空白处退出绘制），Esc 退出',' (click empty to exit), Esc to exit'],
   shapeModeOff:['已退出图形模式','Shape mode off'], fontScaleT:['画布字体比例','Canvas font scale'],
-  boardsTitle:['白板管理','Boards'], newBoard:['＋ 新建白板','+ New board'], exportAllJson:['导出全部 JSON','Export all JSON'],
-  importJson:['导入 JSON','Import JSON'], allBoards:['全部白板（','All boards ('], allBoards2:['）',')'],
+  boardsTitle:['战术板管理','Boards'], newBoard:['＋ 新建战术板','+ New board'], exportAllJson:['导出全部 JSON','Export all JSON'],
+  importJson:['导入 JSON','Import JSON'], allBoards:['全部战术板（','All boards ('], allBoards2:['）',')'],
   currentTag:[' ● 当前',' ● current'], rename:['重命名','Rename'], copy:['复制','Copy'], export:['导出','Export'], del:['删除','Delete'],
   checkTitle:['备赛体检','Prep Check'],
-  checkSub:['对照《辩论筑基》A1→A7 门禁与攻防完整性检查当前白板：','Readiness check against the A1→A7 gates of Debate Universal Grammar:'],
+  checkSub:['对照《辩论筑基》A1→A7 门禁与攻防完整性检查当前战术板：','Readiness check against the A1→A7 gates of Debate Universal Grammar:'],
   locate:['定位','Locate'],
   checkDone:['已完成 ','Done '], checkPct:[' 张卡片（',' cards ('], checkPct2:['%）','%)'],
   checkNoTopic:['没有辩题卡——先确立辩题与持方。','No Motion card — set the motion and side first.'],
@@ -456,9 +456,9 @@ var I18N={
   checkNoRole:['还没有卡片标记辩位（执行人）——可在卡片面板选择一/二/三/四辩或自定义。','No cards have a role (speaker) assigned yet — set 1st/2nd/3rd/4th or custom in the card panel.'],
   checkRoleMissing:['缺少「','No "'], checkRoleMissing2:['」卡片标记，辩位覆盖不完整。','" card marked — role coverage incomplete.'],
   checkOkAll:['没有红色警示项，架构骨架完整。','No warnings — the architecture is complete.'],
-  exportTitle:['导出 / 导入','Export / Import'], currentBoard:['当前白板','Current board'],
+  exportTitle:['导出 / 导入','Export / Import'], currentBoard:['当前战术板','Current board'],
   pngBtn:['PNG 图片','PNG image'], mdBtn:['Markdown 辩案','Markdown brief'], jsonBtn:['JSON 备份','JSON backup'],
-  allBoardsH:['全部白板','All boards'], exportHint:['PNG 按当前主题渲染；Markdown 适合直接贴给教练或写稿；JSON 用于完整备份与迁移。','PNG renders with the current theme; Markdown suits coaches or notes; JSON is for full backup & migration.'],
+  allBoardsH:['全部战术板','All boards'], exportHint:['PNG 按当前主题渲染；Markdown 适合直接贴给教练或写稿；JSON 用于完整备份与迁移。','PNG renders with the current theme; Markdown suits coaches or notes; JSON is for full backup & migration.'],
   exportingPng:['正在导出 PNG…','Exporting PNG…'], exportedMd:['已导出 Markdown','Markdown exported'],
   aiTitle:['AI 整理','AI Organize'], tabRun:['整理','Organize'], tabRec:['记录','Records'],
   apiUrlF:['URL（OpenAI 兼容）','URL (OpenAI-compatible)'], modelF:['模型名称','Model'],
@@ -469,7 +469,7 @@ var I18N={
   modeFree:['自由整理（自定义指令）','Custom (your own instruction)'],
   freeInstr:['自由整理指令','Custom instruction'], freePh:['例如：把内容整理成 850 字立论稿','e.g. Turn this into an 850-character opening speech'],
   startBtn:['开始整理','Start'], stopBtn:['停止','Stop'], copyResult:['复制结果','Copy'], downloadMd:['下载 .md','Download .md'],
-  saveAsCard:['存为卡片','Save as card'], running:['正在整理当前白板（','Organizing current board ('], running2:['）…',')…'],
+  saveAsCard:['存为卡片','Save as card'], running:['正在整理当前战术板（','Organizing current board ('], running2:['）…',')…'],
   aiFail:['请求失败（HTTP ','Request failed (HTTP '], aiFail2:['）：','): '],
   aiCheckCfg:['请检查 URL / Key / 模型名。','Check URL / Key / model name.'],
   aiErr:['请求出错：','Request error: '], stopped:['（已停止）',' (stopped)'],
@@ -490,7 +490,7 @@ var I18N={
   mdSecOregon:['奥瑞冈要素','Oregon Elements'], mdSecOther:['其他','Others'],
   grpArgue:['论证','Argumentation'], grpCase:['立论','Case Construction'], grpClash:['交锋','Clash'],
   grpOregon:['奥瑞冈','Oregon'], grpOther:['其他','Others'],
-  snapBoard:['白板：','Board: '], snapMotion:['辩题：','Motion: '], snapSide:['持方：','Side: '], snapFormat:['赛制：','Format: '],
+  snapBoard:['战术板：','Board: '], snapMotion:['辩题：','Motion: '], snapSide:['持方：','Side: '], snapFormat:['赛制：','Format: '],
   snapTags:['标签：','Tags: '], snapYes:['是','yes'], snapNo:['否','no'],
   snapLink:['连线：','Link: '], snapNote:['批注：','Note: '],
   snapShapes:['图形元素：','Shapes: '], snapShapes2:[' 个（矩形/椭圆/直线）',' (rect/ellipse/line)'],
@@ -575,7 +575,7 @@ function load(){
   }
   if(!store||!store.boards||!store.boards.length){
     store={boards:[],active:null};
-    var b=newBoard(lang==='en'?'New Board':'新白板');
+    var b=newBoard(lang==='en'?'New Board':'新战术板');
     addTipsCard(b);
     store.boards.push(b); store.active=b.id;
   }
@@ -602,7 +602,7 @@ function save(){
 function saveNow(){clearTimeout(saveTimer);try{if(board)board.updatedAt=Date.now();localStorage.setItem(LS,JSON.stringify(store));}catch(e){}}
 function newBoard(name){
   var n=store.boards.length+1;
-  return {id:uid(),name:name||(lang==='en'?'Board '+n:'白板 '+n),topic:'',side:'',format:'',cards:[],texts:[],links:[],shapes:[],view:{x:60,y:60,scale:1},fontScale:1,createdAt:Date.now(),updatedAt:Date.now()};
+  return {id:uid(),name:name||(lang==='en'?'Board '+n:'战术板 '+n),topic:'',side:'',format:'',cards:[],texts:[],links:[],shapes:[],view:{x:60,y:60,scale:1},fontScale:1,createdAt:Date.now(),updatedAt:Date.now()};
 }
 function tipsCard(){
   return {id:uid(),type:'note',title:lang==='en'?'Quick Tips':'操作提示',text:lang==='en'?'Double-click empty space to start\nDrag empty space to move\nHold a card on another card for 0.3s to auto-link':'双击空白处开始\n拖动空白处移动\n卡片重叠 0.3 秒自动连线',x:120,y:120,done:false,tags:[lang==='en'?'Tips':'操作提示'],color:'',role:'',dur:null};
@@ -2521,7 +2521,7 @@ function openModal(html){
 }
 function closeModal(){$('#modalBack').classList.add('hidden');$('#modalBack').innerHTML='';}
 
-/* ================= 白板管理 ================= */
+/* ================= 战术板管理 ================= */
 function openBoards(){
   var h='<button class="modal-close" onclick="closeModal()">×</button><h2>'+t('boardsTitle')+'</h2>';
   h+='<div class="row"><button class="btn-sm gold" onclick="boardNew()">'+t('newBoard')+'</button>'
@@ -2584,7 +2584,7 @@ function boardExportAll(){
 
 /* ================= 文件导入导出 ================= */
 function cloneBoard(b){return JSON.parse(JSON.stringify(b));}
-function sanitize(n){return String(n||(lang==='en'?'Board':'白板')).replace(/[\\/:*?"<>|]/g,'_');}
+function sanitize(n){return String(n||(lang==='en'?'Board':'战术板')).replace(/[\\/:*?"<>|]/g,'_');}
 function download(text,name,mime){
   smartDownload(text instanceof Blob?text:new Blob([text],{type:mime}),name,mime,typeof text==='string'?text:null);
 }
@@ -2688,7 +2688,7 @@ function remapBoard(b){
   if(!b||!Array.isArray(b.cards))return null;
   var nb=cloneBoard(b);
   nb.id=uid();
-  if(!nb.name)nb.name=lang==='en'?'Imported board':'导入白板';
+  if(!nb.name)nb.name=lang==='en'?'Imported board':'导入战术板';
   if(nb.cards)nb.cards.forEach(function(c){migrateWelcomeCard(c);});
   var cmap={};
   nb.cards.forEach(function(c){var old=c.id;c.id=uid();cmap[old]=c.id;});
@@ -3051,7 +3051,7 @@ function openHelp(){
     +'· 工具栏 ▭ / ◯ / ╱（或快捷键 R / C / L）：图形模式，在画布<b>拖拽绘制</b>矩形 / 圆椭圆 / 直线；单击空白处退出绘制；选中后右侧面板可改颜色、虚线，直线支持四种箭头（双击直线快速切换箭头）<br>'
     +'· 工具栏「文」或按 T：文本模式，点击画布放置自由文本（输入完成后自动回到指针模式）<br>'
     +'· 工具栏「Aa」：循环调整画布字体比例（100% / 125% / 150%），只影响画布内容<br>'
-    +'· 工具栏「存 / 载 / 清」：保存本地存档并下载 JSON 备份、载入 JSON 继续工作、一键清空白板（弹窗确认，可撤销）</div></div>'
+    +'· 工具栏「存 / 载 / 清」：保存本地存档并下载 JSON 备份、载入 JSON 继续工作、一键清空战术板（弹窗确认，可撤销）</div></div>'
     +'<h3>连线</h3><div class="field"><div class="hint">'
     +'· 连线类型 = 语义（论证 / 反驳 / 消化 / 反转 / 推论 / 论据 / 并列）<br>'
     +'· 箭头 = 纯视觉标注（无箭头 / 方向1 / 方向2 / 双向），默认无箭头且不会自动改变<br>'
@@ -3070,7 +3070,7 @@ function openHelp(){
     +'Ctrl+A 全选画布元素（卡片/文本/图形/连线）· Ctrl+D 就地复制 · Ctrl+Z / Ctrl+Y 撤销 / 重做 · Ctrl+F 搜索 · ? 帮助<br>'
     +'提示：编辑文字时 Ctrl+C/X/V 仍为原生文本操作，不会误碰卡片</div></div>'
     +'<h3>AI 整理</h3><div class="field"><div class="hint">'
-    +'工具栏「AI」：输入 API Key / 地址 / 模型（与网页版教练共用同一组设置），对当前白板内容做立论整理、攻防查漏、结构诊断或自由整理；结果可复制、下载、存为卡片或留档在记录中。</div></div>';
+    +'工具栏「AI」：输入 API Key / 地址 / 模型（与网页版教练共用同一组设置），对当前战术板内容做立论整理、攻防查漏、结构诊断或自由整理；结果可复制、下载、存为卡片或留档在记录中。</div></div>';
   var en='<button class="modal-close" onclick="closeModal()">×</button><h2>Debate Tactical Board · Help</h2>'
     +'<h3>Basics</h3><div class="field"><div class="hint">'
     +'· <b>Double-click empty space</b>: new card<br>'
@@ -3123,7 +3123,7 @@ var AI_PROMPTS={
     en:'You are a Chinese debate coach fluent in the Debate Universal Grammar system (A→B→C model, two-layer definition structure, Scope of Discussion, Criterion B0, Sub-Arguments, Value Ladder, three rebuttal paths, Absorption/Reversal, Type 1/2 Mainline, three-dimensional judging). Organize the user\'s tactic-board content into a clear, tournament-ready case brief in this order: Motion & keyword definitions → Scope of Discussion → Criterion B0 → Sub-Arguments (with evidence) → Value Points → opponent prediction & clash → Structural Clash → Mainline. Give the conclusion first, then key points for each stage; flag missing stages; be concise and explain terms in plain language.'
   },
   attack:{
-    zh:'你是华语辩论教练，精通《辩论筑基》体系。请对用户提供的白板内容做攻防查漏：1) 对每个分论点，检查三种反驳路径（事实层 A→B 不成立、逻辑层 B→C 不成立、价值层 B 不重要）是否都有预案，缺失的逐条指出并给出可执行的补强方向；2) 检查对方论点是否有消化/反转预案，提示 1 型主线风险；3) 输出为“检查清单”，每条注明缺失项、风险等级、补强建议。',
+    zh:'你是华语辩论教练，精通《辩论筑基》体系。请对用户提供的战术板内容做攻防查漏：1) 对每个分论点，检查三种反驳路径（事实层 A→B 不成立、逻辑层 B→C 不成立、价值层 B 不重要）是否都有预案，缺失的逐条指出并给出可执行的补强方向；2) 检查对方论点是否有消化/反转预案，提示 1 型主线风险；3) 输出为“检查清单”，每条注明缺失项、风险等级、补强建议。',
     en:'You are a Chinese debate coach fluent in the Debate Universal Grammar system. Audit the user\'s board content for clash readiness: 1) For every Sub-Argument, check whether all three rebuttal paths are covered (Fact layer: A→B fails; Logic layer: B→C fails; Value layer: B is unimportant) and point out each gap with actionable fixes; 2) Check whether opponent arguments have Absorption/Reversal plans and flag Type-1 Mainline risk; 3) Output as a checklist with missing item, risk level, and recommended fix per line.'
   },
   diag:{
@@ -3131,7 +3131,7 @@ var AI_PROMPTS={
     en:'You are a Chinese debate coach fluent in the A1→A7 case-building gates of the Debate Universal Grammar system. Diagnose the structure of the user\'s tactic-board content: check keyword definitions (A1), legitimacy of the Scope of Discussion (A2), Criterion B0 & Sub-Arguments (A3), value deepening (A4), exhaustive three-path rebuttals (A5), Structural Clash (A6), and Mainline prediction (A7). List passed / missing / risky items, give a fix for each, then a summary and next steps.'
   },
   free:{
-    zh:'你是华语辩论教练，精通《辩论筑基》体系。请根据用户指令对白板内容进行整理。',
+    zh:'你是华语辩论教练，精通《辩论筑基》体系。请根据用户指令对战术板内容进行整理。',
     en:'You are a Chinese debate coach fluent in the Debate Universal Grammar system. Organize the board content according to the user\'s instruction.'
   }
 };
@@ -3242,7 +3242,7 @@ async function aiStart(){
   var user=aiSnapshot();
   if(mode==='free'){
     var ins=$('#aiCustom').value.trim();
-    if(ins)user=ins+'\n\n'+(lang==='en'?'Here is the board content:\n\n':'以下是白板内容：\n\n')+user;
+    if(ins)user=ins+'\n\n'+(lang==='en'?'Here is the board content:\n\n':'以下是战术板内容：\n\n')+user;
   }
   var out=$('#aiOut');
   out.textContent=t('running')+aiModeName(mode)+t('running2');
