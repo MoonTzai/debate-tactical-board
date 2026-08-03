@@ -649,16 +649,26 @@ function redo(){
   applySnap(redoStack.pop());
 }
 /* ================= 渲染 ================= */
+var renderBusy=false, renderQueued=false;
 function render(){
-  $('#world').style.setProperty('--fscale',(board.fontScale||1));
-  var fs=board.fontScale||1;
-  var fb=$('#tbFont');
-  if(fb){fb.classList.toggle('on',fs!==1);fb.title=t('fontScaleT')+' '+(Math.round(fs*100))+'%';}
-  renderCards();
-  renderTexts();
-  renderLinks();
-  updateView();
-  updateStatus();
+  if(renderBusy){renderQueued=true;return;}
+  renderBusy=true;
+  try{
+    $('#world').style.setProperty('--fscale',(board.fontScale||1));
+    var fs=board.fontScale||1;
+    var fb=$('#tbFont');
+    if(fb){fb.classList.toggle('on',fs!==1);fb.title=t('fontScaleT')+' '+(Math.round(fs*100))+'%';}
+    renderCards();
+    renderTexts();
+    renderLinks();
+    updateView();
+    updateStatus();
+  }catch(err){
+    if(window.console)console.error('render:',err);
+  }finally{
+    renderBusy=false;
+    if(renderQueued){renderQueued=false;render();}
+  }
 }
 function updateView(){
   var w=$('#world');
@@ -747,6 +757,8 @@ function renderCards(){
       +'<div class="rhandle" title="'+(lang==='en'?'Drag to resize (double-click: auto height)':'拖动调整大小（双击恢复自适应高度）')+'"></div>'
       +'</div>';
   });
+  var _ae=document.activeElement;
+  if(_ae&&_ae.isContentEditable&&L.contains(_ae))_ae.blur();
   L.innerHTML=h;
   cardH={};
   L.querySelectorAll('.card').forEach(function(el){
@@ -772,6 +784,8 @@ function renderTexts(){
     var col=TEXT_COLORS[t.color]||'';
     h+='<div class="'+cls.join(' ')+'" data-id="'+t.id+'" style="left:'+t.x+'px;top:'+t.y+'px'+(col?';color:'+col:'')+'" data-ph="'+(lang==='en'?'(Free text)':'（自由文本）')+'">'+esc(t.text)+'</div>';
   });
+  var _ae=document.activeElement;
+  if(_ae&&_ae.isContentEditable&&L.contains(_ae))_ae.blur();
   L.innerHTML=h;
   textSizes={};
   L.querySelectorAll('.text-el').forEach(function(el){
@@ -1884,6 +1898,7 @@ function onPU(e){
   pointers.delete(e.pointerId);
   if(pinch&&pointers.size<2){pinch=null;debounceViewSave();}
   if(!drag||drag.pointerId!==e.pointerId)return;
+  try{
   if(drag.mode==='pan'){
     if(!drag.moved){
       if(isDoubleTap('empty',null,e.clientX,e.clientY)){lastTap=null;dblCreateAt(e.clientX,e.clientY);}
@@ -1958,7 +1973,8 @@ function onPU(e){
       enterTextEdit(t.id);
     }
   }
-  drag=null;
+  }catch(err){if(window.console)console.error(err);}
+  finally{drag=null;}
 }
 function onPC(e){
   pointers.delete(e.pointerId);
