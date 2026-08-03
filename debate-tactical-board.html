@@ -667,7 +667,30 @@ function redo(){
   applySnap(redoStack.pop());
 }
 /* ================= 渲染 ================= */
-var renderBusy=false, renderQueued=false;
+var renderBusy=false, renderQueued=false, alignRepair=false;
+function checkRenderAlignment(){
+  if(!board||!board.cards.length)return;
+  var el0=document.querySelector('#cardLayer .card');
+  if(!el0)return;
+  var c=board.cards[0];
+  var dom=el0.getBoundingClientRect();
+  var det=cardScreenRect(c);
+  var dy=Math.round(det.t-dom.top), dx=Math.round(det.l-dom.left);
+  if(Math.abs(dy)>2||Math.abs(dx)>2){
+    if(window.console)console.warn('[render-alignment]',JSON.stringify({
+      dy:dy,dx:dx,
+      view:{x:view.x,y:view.y,s:view.scale},
+      css:document.getElementById('world').style.transform,
+      stage:{l:stageOrigin().x,t:stageOrigin().y},
+      worlds:document.querySelectorAll('#world').length,
+      stages:document.querySelectorAll('#stage').length,
+      cardInFirstWorld:(el0.closest('#world')===document.getElementById('world')),
+      cardParent:(el0.parentElement?el0.parentElement.id:'?'),
+      url:location.href
+    }));
+    if(!alignRepair){alignRepair=true;setTimeout(function(){alignRepair=false;render();render();},0);}
+  }
+}
 function render(){
   if(renderBusy){renderQueued=true;return;}
   renderBusy=true;
@@ -681,6 +704,7 @@ function render(){
     try{renderLinks();}catch(err){if(window.console)console.error('renderLinks:',err);}
     updateView();
     updateStatus();
+    checkRenderAlignment();
   }catch(err){
     if(window.console)console.error('render:',err);
   }finally{
