@@ -103,6 +103,11 @@ body.dark .card .dup-btn{color:#000}
 .card .dup-btn{pointer-events:none}
 .card.sel .dup-btn,.card:hover .dup-btn{opacity:1;pointer-events:auto}
 .card .dup-btn:hover{background:var(--gold);transform:scale(1.25)}
+.card .fold-btn{margin-left:auto;cursor:pointer;font-size:12px;color:var(--gray);padding:0 2px;user-select:none;opacity:.65;line-height:1}
+.card .fold-btn:hover{color:var(--gold);opacity:1}
+.card.folded .c-body,.card.folded .c-tags{display:none}
+.card.hfix{display:flex;flex-direction:column}
+.card.hfix .c-body{flex:1 1 auto;overflow-y:auto;min-height:0}
 .card .del-btn{position:absolute;top:-9px;right:-9px;width:18px;height:18px;border-radius:50%;background:var(--red);color:#fff;font-size:12px;line-height:15px;text-align:center;opacity:0;pointer-events:none;transition:opacity .15s;cursor:pointer;z-index:3;border:2px solid var(--bg);box-shadow:0 2px 6px var(--shadow)}
 .card.sel .del-btn,.card:hover .del-btn{opacity:1;pointer-events:auto}
 .card .del-btn:hover{transform:scale(1.2);background:#c62828}
@@ -721,9 +726,11 @@ function renderCards(){
     if(isSel(c.id))cls.push('sel');
     if(!matchCard(c))cls.push('dim');
     if(editing&&editing.kind==='card'&&editing.id===c.id)cls.push('editing');
+    if(c.fold)cls.push('folded');
+    if(c.h)cls.push('hfix');
     if(drag&&drag.mode==='group'&&drag.items.some(function(it){return it.kind==='card'&&it.id===c.id;}))cls.push('dragging');
-    h+='<div class="'+cls.join(' ')+'" data-id="'+c.id+'" style="left:'+c.x+'px;top:'+c.y+'px;width:'+cardW(c)+'px;border-left-color:'+col+'">'
-      +'<div class="card-head"><span class="c-ico">'+(t?t.icon:'❔')+'</span><span class="c-type" style="color:'+col+'">'+esc(typeName(c.type))+'</span>'+(c.role?'<span class="c-role" title="'+(lang==='en'?'Role (Speaker)':'辩位（执行人）')+'">'+esc(roleName(c.role))+'</span>':'')+(c.dur?'<span class="c-dur" title="'+(lang==='en'?'Duration':'时长')+'">'+fmtDur(c.dur)+'</span>':'')+(c.done?'<span class="c-done">✔</span>':'')+'</div>'
+    h+='<div class="'+cls.join(' ')+'" data-id="'+c.id+'" style="left:'+c.x+'px;top:'+c.y+'px;width:'+cardW(c)+'px'+(c.h?';height:'+c.h+'px':'')+';border-left-color:'+col+'">'
+      +'<div class="card-head"><span class="c-ico">'+(t?t.icon:'❔')+'</span><span class="c-type" style="color:'+col+'">'+esc(typeName(c.type))+'</span>'+(c.role?'<span class="c-role" title="'+(lang==='en'?'Role (Speaker)':'辩位（执行人）')+'">'+esc(roleName(c.role))+'</span>':'')+(c.dur?'<span class="c-dur" title="'+(lang==='en'?'Duration':'时长')+'">'+fmtDur(c.dur)+'</span>':'')+(c.done?'<span class="c-done">✔</span>':'')+(c.fold||(c.text&&c.text.length)?'<span class="fold-btn" title="'+(lang==='en'?(c.fold?'Expand':'Collapse'):(c.fold?'展开':'折叠'))+'">'+(c.fold?'▸':'▾')+'</span>':'')+'</div>'
       +'<div class="c-title" data-ph="'+(lang==='en'?'(Double-click to edit title)':'（双击编辑标题）')+'">'+esc(c.title)+'</div>'
       +'<div class="c-body" data-ph="'+(lang==='en'?'(Body)':'（正文）')+'">'+esc(c.text)+'</div>'
       +(c.tags.length?'<div class="c-tags">'+c.tags.map(function(x){return '<span class="c-tag">#'+esc(x)+'</span>';}).join('')+'</div>':'')
@@ -731,7 +738,7 @@ function renderCards(){
       +'<div class="plus-btn" title="'+(lang==='en'?'New linked card':'新建关联卡')+'">＋</div>'
 +'<div class="dup-btn" title="'+(lang==='en'?'Duplicate in place (Ctrl+D)':'就地复制（Ctrl+D）')+'">⧉</div>'
       +'<div class="del-btn" title="'+(lang==='en'?'Delete this card':'删除本卡片')+'">×</div>'
-      +'<div class="rhandle" title="'+(lang==='en'?'Drag to resize width':'拖动调整宽度')+'"></div>'
+      +'<div class="rhandle" title="'+(lang==='en'?'Drag to resize (double-click: auto height)':'拖动调整大小（双击恢复自适应高度）')+'"></div>'
       +'</div>';
   });
   L.innerHTML=h;
@@ -1328,7 +1335,7 @@ function duplicateSelection(){
   var off=36;
   board.cards.forEach(function(c){
     if(sel.ids.indexOf(c.id)<0)return;
-    var n={id:uid(),type:c.type,title:c.title,text:c.text,x:c.x+off,y:c.y+off,done:c.done,tags:c.tags.slice(),color:c.color,role:c.role,dur:c.dur};
+    var n={id:uid(),type:c.type,title:c.title,text:c.text,x:c.x+off,y:c.y+off,done:c.done,tags:c.tags.slice(),color:c.color,role:c.role,dur:c.dur,w:c.w,h:c.h,fold:c.fold};
     map[c.id]=n.id; nids.push(n.id);
     board.cards.push(n);
   });
@@ -1788,6 +1795,7 @@ function onPD(e){
   if(t.closest&&t.closest('.rhandle')&&cardEl){startCardResize(e,cardEl);return;}
   if(t.closest&&t.closest('.plus-btn')&&cardEl){handlePlus(cardEl);return;}
   if(t.closest&&t.closest('.dup-btn')&&cardEl){handleDup(cardEl);return;}
+  if(t.closest&&t.closest('.fold-btn')&&cardEl){toggleFold(cardEl.dataset.id);return;}
   if(t.closest&&t.closest('.port')&&cardEl){startPortDrag(e,cardEl);return;}
   if(cardEl){startCardDrag(e,cardEl);return;}
   if(textEl){startTextDrag(e,textEl);return;}
@@ -1850,9 +1858,13 @@ function onPM(e){
     renderLinks();
   }else if(drag.mode==='card-resize'){
     var rc=cardById(drag.id);if(!rc)return;
+    if(Math.abs(e.clientX-drag.sx)+Math.abs(e.clientY-drag.sy)>4)drag.moved=true;
     rc.w=Math.round(clamp(drag.ow+(e.clientX-drag.sx)/view.scale,160,520));
+    var dy=(e.clientY-drag.sy)/view.scale;
+    if(drag.oh||Math.abs(dy)>4){ rc.h=Math.round(clamp((drag.oh||0)+dy,60,900)); }
+    else if(!drag.oh){ delete rc.h; }
     var rel=$('#cardLayer').querySelector('.card[data-id="'+drag.id+'"]');
-    if(rel)rel.style.width=rc.w+'px';
+    if(rel){ rel.style.width=rc.w+'px'; rel.style.height=rc.h?rc.h+'px':''; }
     renderLinks();
   }
 }
@@ -1909,6 +1921,10 @@ function onPU(e){
   }else if(drag.mode==='shape-resize'){
     save();render();
   }else if(drag.mode==='card-resize'){
+    if(!drag.moved){
+      if(isDoubleTap('rh',drag.id,e.clientX,e.clientY)){lastTap=null;resetCardHeight(drag.id);}
+      else{lastTap={kind:'rh',id:drag.id,x:e.clientX,y:e.clientY,t:performance.now()};}
+    }else lastTap=null;
     save();render();
   }else if(drag.mode==='tap-text'){
     if(!drag.moved){
@@ -2089,7 +2105,7 @@ function startCardResize(e,cardEl){
   var id=cardEl.dataset.id;
   var c=cardById(id);if(!c)return;
   pushUndo();
-  drag={mode:'card-resize',pointerId:e.pointerId,id:id,sx:e.clientX,sy:e.clientY,ow:cardW(c)};
+  drag={mode:'card-resize',pointerId:e.pointerId,id:id,sx:e.clientX,sy:e.clientY,ow:cardW(c),oh:(c.h||0)};
   $('#stage').setPointerCapture(e.pointerId);
 }
 function toggleInSelection(id){
@@ -2290,6 +2306,17 @@ function handlePlus(cardEl){
 function handleDup(cardEl){
   var id=cardEl.dataset.id; if(!cardById(id))return;
   selectCards([id]); duplicateSelection();
+}
+
+function toggleFold(id){
+  var c=cardById(id);if(!c)return;
+  pushUndo();
+  c.fold=!c.fold; save(); render(); renderPanel();
+}
+function resetCardHeight(id){
+  var c=cardById(id);if(!c)return;
+  pushUndo();
+  delete c.h; save(); render(); renderPanel();
 }
 
 /* ---------- 捏合缩放 ---------- */
@@ -2979,7 +3006,8 @@ function openHelp(){
     +'· <b>快速建卡</b>：点击顶栏类型标签，或按住标签<b>拖到画布任意位置</b>放置<br>'
     +'· <b>双击连线</b>：循环切换箭头；<b>双击连线上的类型标签</b>：添加文字标签<br>'
     +'· <b>拖动卡片</b>：移动；把卡片拖到另一张卡上<b>停留 0.3 秒</b>自动连线<br>'
-    +'· 卡片右下角斜纹手柄：拖动调整卡片宽度（160–520px），高度随内容自动<br>'
+    +'· 卡片右下角斜纹手柄：拖动自由调整卡片宽高（宽 160–520px，高 60–900px），双击恢复高度自适应<br>'
+    +'· 卡片头部 ▾/▸：折叠 / 展开长文本卡片（数据不丢失）<br>'
     +'· 卡片面板「时长（可选）」：填写 MM:SS（如 01:30），卡片头部显示蓝色时长徽标<br>'
     +'· <b>按住鼠标中键</b>：在画布任意位置拖动即可平移画面<br>'
     +'· 卡片右侧金色圆点（连接柄）：拖到另一张卡上连线；拖到空白处=新建关联卡<br>'
@@ -3019,7 +3047,8 @@ function openHelp(){
     +'· <b>Quick add</b>: click a type chip, or hold and <b>drag it onto the canvas</b><br>'
     +'· <b>Double-click a link</b>: cycle arrows; <b>double-click the link type chip</b>: edit its label<br>'
     +'· <b>Drag a card</b>: move it; hold it on another card for <b>0.3s</b> to auto-link<br>'
-    +'· Diagonal grip at the card bottom-right: drag to resize width (160–520px); height follows content<br>'
+    +'· Diagonal grip at the card bottom-right: drag to resize width & height (160–520px × 60–900px); double-click for auto height<br>'
+    +'· ▾/▸ on the card header: collapse / expand long-text cards (data is never lost)<br>'
     +'· Card panel "Duration (optional)": enter MM:SS (e.g. 01:30); a blue duration badge appears on the card<br>'
     +'· <b>Hold the middle mouse button</b> anywhere on the canvas: pan the view<br>'
     +'· Gold dot on a card right edge (connector): drag to another card to link, or to empty space to create a linked card<br>'
