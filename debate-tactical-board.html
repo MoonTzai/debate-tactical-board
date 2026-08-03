@@ -658,9 +658,9 @@ function render(){
     var fs=board.fontScale||1;
     var fb=$('#tbFont');
     if(fb){fb.classList.toggle('on',fs!==1);fb.title=t('fontScaleT')+' '+(Math.round(fs*100))+'%';}
-    renderCards();
-    renderTexts();
-    renderLinks();
+    try{renderCards();}catch(err){if(window.console)console.error('renderCards:',err);}
+    try{renderTexts();}catch(err){if(window.console)console.error('renderTexts:',err);}
+    try{renderLinks();}catch(err){if(window.console)console.error('renderLinks:',err);}
     updateView();
     updateStatus();
   }catch(err){
@@ -759,7 +759,7 @@ function renderCards(){
   });
   var _ae=document.activeElement;
   if(_ae&&_ae.isContentEditable&&L.contains(_ae))_ae.blur();
-  L.innerHTML=h;
+  try{L.innerHTML=h;}catch(err){if(window.console)console.error('renderCards:',err);}
   cardH={};
   L.querySelectorAll('.card').forEach(function(el){
     cardH[el.dataset.id]=el.offsetHeight;
@@ -786,7 +786,7 @@ function renderTexts(){
   });
   var _ae=document.activeElement;
   if(_ae&&_ae.isContentEditable&&L.contains(_ae))_ae.blur();
-  L.innerHTML=h;
+  try{L.innerHTML=h;}catch(err){if(window.console)console.error('renderTexts:',err);}
   textSizes={};
   L.querySelectorAll('.text-el').forEach(function(el){
     textSizes[el.dataset.id]={w:el.offsetWidth,h:el.offsetHeight};
@@ -895,7 +895,7 @@ function renderLinks(){
   });
   h+='<path id="tempPath" d="" fill="none" stroke="var(--gold)" stroke-width="2" stroke-dasharray="6 4" style="display:none;pointer-events:none"/>';
   h+='<g id="tempShape"></g>';
-  S.innerHTML=h;
+  try{S.innerHTML=h;}catch(err){if(window.console)console.error('renderLinks:',err);}
 }
 /* ================= 选择 ================= */
 function selectCards(ids){sel={kind:'card',ids:ids};render();renderPanel();}
@@ -2242,6 +2242,8 @@ function completeHold(){
 }
 function holdCheck(e){
   if(drag.items.length!==1||drag.items[0].kind!=='card')return;
+  var els=document.querySelectorAll('#cardLayer .card');
+  for(var ei=0;ei<els.length;ei++)cardH[els[ei].dataset.id]=els[ei].offsetHeight;
   var c=cardById(drag.items[0].id);if(!c)return;
   var target=cardAtPoint(e.clientX,e.clientY,c.id);
   if(target){
