@@ -1,4 +1,4 @@
-# 辩论战术白板 · Debate Tactical Board
+# 辩论战术板 · Debate Tactical Board
 
 单文件、零依赖的无限画布辩论备赛工具（中文 / English 双语界面）。
 A single-file, zero-dependency, infinite-canvas debate preparation whiteboard (Chinese / English UI).
@@ -15,7 +15,7 @@ A single-file, zero-dependency, infinite-canvas debate preparation whiteboard (C
 
 ## 项目简介 / About
 
-辩论战术白板（Debate Tactical Board）是一份用于辩论备赛的无限画布工具：卡片式论点结构、语义连线、自由批注与图形，内置《辩论筑基》体系的备赛体检与 AI 整理。母版为单个 HTML 文件，可直接在浏览器打开，也可封装为安卓 APK 或作为移动网页应用使用。
+辩论战术板（Debate Tactical Board）是一份用于辩论备赛的无限画布工具：卡片式论点结构、语义连线、自由批注与图形，内置《辩论筑基》体系的备赛体检与 AI 整理。母版为单个 HTML 文件，可直接在浏览器打开，也可封装为安卓 APK 或作为移动网页应用使用。
 
 Debate Tactical Board is an infinite-canvas tool for debate preparation: card-based argument structures, semantic links, free annotations and shapes, plus a readiness check and AI organizing built on the Debate Universal Grammar system. The master is a single HTML file that runs directly in the browser, and can also be packaged as an Android APK or used as a mobile web app.
 
