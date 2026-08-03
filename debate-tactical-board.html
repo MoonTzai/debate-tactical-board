@@ -57,7 +57,7 @@ body.dark .tb.on{color:#000}
 /* ---------- stage / world ---------- */
 #stage{flex:1;position:relative;overflow:hidden;background:var(--bg);touch-action:none;min-width:0}
 #stage.text-mode{cursor:crosshair}
-#world{position:absolute;left:0;top:0;width:8192px;height:8192px;pointer-events:none;transform-origin:0 0;will-change:transform;background-image:radial-gradient(circle,var(--grid) 1.2px,transparent 1.3px);background-size:24px 24px}
+#world{position:absolute;left:0;top:0;width:8192px;height:8192px;pointer-events:none;transform-origin:0 0;background-image:radial-gradient(circle,var(--grid) 1.2px,transparent 1.3px);background-size:24px 24px}
 #svgLinks{position:absolute;left:0;top:0;width:20000px;height:20000px;overflow:visible;pointer-events:none}
 #svgLinks .link-hit{pointer-events:stroke}
 #svgLinks rect[data-link-id]{pointer-events:all;cursor:pointer}
@@ -131,12 +131,12 @@ body.dark .card .dup-btn{color:#000}
 .link-chip-text{pointer-events:none;user-select:none;font-size:calc(11px * var(--fscale))}
 
 /* ---------- marquee / hold ring ---------- */
-#marquee{position:absolute;border:1px solid var(--gold);background:rgba(79,107,237,.10);display:none;z-index:5;pointer-events:none}
+#marquee{position:fixed;left:0;top:0;border:1px solid var(--gold);background:rgba(79,107,237,.10);display:none;z-index:5;pointer-events:none}
 body.dark #marquee{background:rgba(255,192,0,.10)}
 #marquee.intersect{border-style:dashed;border-color:var(--blue);background:rgba(79,168,238,.12)}
-#holdRing{position:absolute;width:64px;height:64px;border-radius:50%;background:conic-gradient(var(--gold) var(--p,0%),rgba(128,128,128,.28) 0);display:none;z-index:6;pointer-events:none;transform:translate(-50%,-50%)}
+#holdRing{position:fixed;left:0;top:0;width:64px;height:64px;border-radius:50%;background:conic-gradient(var(--gold) var(--p,0%),rgba(128,128,128,.28) 0);display:none;z-index:6;pointer-events:none;transform:translate(-50%,-50%)}
 #holdRingInner{position:absolute;inset:7px;border-radius:50%;background:var(--bg)}
-#tempLabel{position:absolute;display:none;z-index:8;background:var(--card);border:1px solid var(--gold);border-radius:8px;padding:6px 8px;box-shadow:0 4px 14px var(--shadow)}
+#tempLabel{position:fixed;left:0;top:0;display:none;z-index:8;background:var(--card);border:1px solid var(--gold);border-radius:8px;padding:6px 8px;box-shadow:0 4px 14px var(--shadow)}
 #tempLabel input{background:var(--input);border:1px solid var(--border);color:var(--text);padding:5px 8px;border-radius:5px;font-size:12px;outline:none;width:150px}
 #tempLabel input:focus{border-color:var(--gold)}
 #tempLabel button{margin-left:5px}
@@ -282,7 +282,8 @@ body.dark .tchip.on{color:#000}
     <button class="tb" onclick="openHelp()" data-i18n-title="helpT">?</button>
   </div>
 
-  <div id="stage">
+  <div id="stage" style="position:relative">
+    <div id="originMarker" style="position:absolute;left:0;top:0;width:1px;height:1px;pointer-events:none"></div>
     <div id="world">
       <svg id="svgLinks"></svg>
       <div id="cardLayer"></div>
@@ -760,7 +761,7 @@ function render(){
 }
 function updateView(){
   var w=$('#world');
-  w.style.transform='translate3d('+view.x+'px,'+view.y+'px,0) scale('+view.scale+')';
+  w.style.transform='translate('+view.x+'px,'+view.y+'px) scale('+view.scale+')';
   void w.offsetHeight;
   var modeName=mode==='text'?t('textModeT'):mode==='shape'?(t('shapeModeT')+'·'+(shapeKind==='rect'?t('rectName'):shapeKind==='ellipse'?t('ellipseName'):t('lineName'))):t('selectMode');
   $('#statRight').textContent=Math.round(view.scale*100)+'% · '+modeName;
@@ -1616,7 +1617,8 @@ function worldToScreen(x,y){
   return {x:r.left+view.x+x*view.scale+alignOffset.x, y:r.top+view.y+y*view.scale+alignOffset.y};
 }
 function stageOrigin(){
-  var r=$('#stage').getBoundingClientRect();
+  var m=document.getElementById('originMarker');
+  var r=m?m.getBoundingClientRect():$('#stage').getBoundingClientRect();
   return {x:r.left,y:r.top};
 }
 function newCard(x,y,type){
@@ -1790,9 +1792,8 @@ function openLinkLabel(id){
   var g=linkGeom(l); if(!g)return;
   tlLinkId=id;
   var p=worldToScreen(g.mx,g.my-30);
-  var o=stageOrigin();
   var t=$('#tempLabel');
-  t.style.left=(p.x-o.x)+'px';t.style.top=(p.y-o.y)+'px';
+  t.style.left=p.x+'px';t.style.top=p.y+'px';
   t.style.display='block';
   var inp=$('#tlInput');inp.value=l.label||'';inp.focus();inp.select();
 }
@@ -2107,14 +2108,14 @@ function startMarquee(e){
   var o=stageOrigin();
   $('#stage').setPointerCapture(e.pointerId);
   var m=$('#marquee');
-  m.style.left=(drag.sx-o.x)+'px';m.style.top=(drag.sy-o.y)+'px';m.style.width='0';m.style.height='0';m.style.display='block';
+  m.style.left=drag.sx+'px';m.style.top=drag.sy+'px';m.style.width='0';m.style.height='0';m.style.display='block';
 }
 function updateMarquee(e){
   var o=stageOrigin();
   var x1=Math.min(drag.sx,e.clientX)-o.x, y1=Math.min(drag.sy,e.clientY)-o.y;
   var x2=Math.max(drag.sx,e.clientX)-o.x, y2=Math.max(drag.sy,e.clientY)-o.y;
   var m=$('#marquee');
-  m.style.left=x1+'px';m.style.top=y1+'px';m.style.width=(x2-x1)+'px';m.style.height=(y2-y1)+'px';
+  m.style.left=(Math.min(drag.sx,e.clientX))+'px';m.style.top=(Math.min(drag.sy,e.clientY))+'px';m.style.width=(Math.abs(e.clientX-drag.sx))+'px';m.style.height=(Math.abs(e.clientY-drag.sy))+'px';
   m.classList.toggle('intersect',e.clientX<drag.sx);
 }
 function finishMarquee(e){
@@ -2329,10 +2330,9 @@ function cardAtPoint(px,py,excludeId){
 }
 function showHold(target){
   var r=cardScreenRect(target);
-  var o=stageOrigin();
   var ring=$('#holdRing');
-  ring.style.left=((r.l+r.r)/2-o.x)+'px';
-  ring.style.top=((r.t+r.b)/2-o.y)+'px';
+  ring.style.left=((r.l+r.r)/2)+'px';
+  ring.style.top=((r.t+r.b)/2)+'px';
   ring.style.setProperty('--p','0%');
   ring.style.display='block';
 }
