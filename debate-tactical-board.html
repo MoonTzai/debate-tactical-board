@@ -75,18 +75,18 @@ body.dark .tb.on{color:#000}
 .card.dim{opacity:.18;pointer-events:none}
 .card.editing{cursor:text;user-select:text;box-shadow:0 0 0 2px var(--gold),0 4px 14px var(--shadow)}
 .card-head{display:flex;align-items:center;gap:6px;padding:9px 10px 3px}
-.c-ico{font-size:15px;line-height:1}
-.c-type{font-size:11px;font-weight:700;flex:1;letter-spacing:.3px}
-.c-role{font-size:10px;font-weight:700;padding:1px 8px;border-radius:8px;background:var(--gold);color:#fff;white-space:nowrap;flex-shrink:0}
+.c-ico{font-size:calc(15px * var(--fscale));line-height:1}
+.c-type{font-size:calc(11px * var(--fscale));font-weight:700;flex:1;letter-spacing:.3px}
+.c-role{font-size:calc(10px * var(--fscale));font-weight:700;padding:1px 8px;border-radius:8px;background:var(--gold);color:#fff;white-space:nowrap;flex-shrink:0}
 body.dark .c-role{color:#000}
-.c-dur{font-size:10px;font-weight:700;padding:1px 8px;border-radius:8px;background:var(--blue);color:#fff;white-space:nowrap;flex-shrink:0}
-.c-done{color:var(--green);font-size:13px}
-.c-title{font-size:14px;font-weight:700;padding:2px 10px 4px;white-space:pre-wrap;word-break:break-word;min-height:20px;line-height:1.45;outline:none;border-radius:4px}
-.c-body{font-size:13px;color:var(--gray);padding:0 10px 9px;white-space:pre-wrap;word-break:break-word;min-height:18px;line-height:1.55;outline:none;border-radius:4px}
+.c-dur{font-size:calc(10px * var(--fscale));font-weight:700;padding:1px 8px;border-radius:8px;background:var(--blue);color:#fff;white-space:nowrap;flex-shrink:0}
+.c-done{color:var(--green);font-size:calc(13px * var(--fscale))}
+.c-title{font-size:calc(14px * var(--fscale));font-weight:700;padding:2px 10px 4px;white-space:pre-wrap;word-break:break-word;min-height:20px;line-height:1.45;outline:none;border-radius:4px}
+.c-body{font-size:calc(13px * var(--fscale));color:var(--gray);padding:0 10px 9px;white-space:pre-wrap;word-break:break-word;min-height:18px;line-height:1.55;outline:none;border-radius:4px}
 .c-title:empty::before,.c-body:empty::before{content:attr(data-ph);color:var(--dark-gray);opacity:.65;font-weight:400}
 .c-title:focus,.c-body:focus{background:var(--input)}
 .c-tags{display:flex;gap:4px;flex-wrap:wrap;padding:0 10px 9px}
-.c-tag{font-size:10px;color:var(--gray);background:var(--input);border:1px solid var(--border);border-radius:8px;padding:1px 7px;white-space:nowrap}
+.c-tag{font-size:calc(10px * var(--fscale));color:var(--gray);background:var(--input);border:1px solid var(--border);border-radius:8px;padding:1px 7px;white-space:nowrap}
 .card .port{position:absolute;right:-10px;top:50%;width:16px;height:16px;margin-top:-8px;border-radius:50%;background:var(--gold);border:2px solid var(--bg);opacity:0;transition:opacity .15s;cursor:crosshair;z-index:3}
 .card .port{pointer-events:none}
 .card.sel .port,.card:hover .port{opacity:1}
@@ -114,19 +114,20 @@ body.dark .card .dup-btn{color:#000}
 .card .rhandle{position:absolute;right:2px;bottom:2px;width:12px;height:12px;cursor:nwse-resize;opacity:0;pointer-events:none;transition:opacity .15s;z-index:3;background:linear-gradient(135deg,transparent 45%,var(--gold) 45%,var(--gold) 55%,transparent 55%)}
 .card.sel .rhandle,.card:hover .rhandle{opacity:1;pointer-events:auto}
 
+#world{--fscale:1}
 /* ---------- text annotations ---------- */
-.text-el{position:absolute;min-width:70px;cursor:grab;font-size:16px;line-height:1.5;color:var(--text);padding:3px 7px;border-radius:6px;white-space:pre-wrap;word-break:break-word;user-select:none;border:1px dashed transparent;pointer-events:auto;transition:box-shadow .12s}
+.text-el{position:absolute;min-width:70px;cursor:grab;font-size:calc(16px * var(--fscale));line-height:1.5;color:var(--text);padding:3px 7px;border-radius:6px;white-space:pre-wrap;word-break:break-word;user-select:none;border:1px dashed transparent;pointer-events:auto;transition:box-shadow .12s}
 .text-el.sel{border-color:var(--gold);box-shadow:0 0 0 1px var(--gold)}
 .text-el.dim{opacity:.2;pointer-events:none}
 .text-el.editing{user-select:text;cursor:text;border-color:var(--gold);background:var(--input);box-shadow:0 0 0 1px var(--gold)}
-.text-el.size-s{font-size:12px}
-.text-el.size-l{font-size:22px}
+.text-el.size-s{font-size:calc(12px * var(--fscale))}
+.text-el.size-l{font-size:calc(22px * var(--fscale))}
 .text-el:empty::before{content:attr(data-ph);color:var(--dark-gray);opacity:.65}
 
 /* ---------- links ---------- */
 .link-g{cursor:pointer}
 .link-vis.sel{filter:drop-shadow(0 0 4px var(--gold))}
-.link-chip-text{pointer-events:none;user-select:none}
+.link-chip-text{pointer-events:none;user-select:none;font-size:calc(11px * var(--fscale))}
 
 /* ---------- marquee / hold ring ---------- */
 #marquee{position:absolute;border:1px solid var(--gold);background:rgba(79,107,237,.10);display:none;z-index:5;pointer-events:none}
@@ -268,6 +269,7 @@ body.dark .tchip.on{color:#000}
     <button class="tb" onclick="fit()" data-i18n-title="fitT">⤢</button>
     <button class="tb" onclick="zoomAtCenter(0.8)" data-i18n-title="zoomOut">−</button>
     <button class="tb" onclick="zoomAtCenter(1.25)" data-i18n-title="zoomIn">＋</button>
+    <button class="tb" id="tbFont" onclick="toggleFontScale()" data-i18n-title="fontScaleT">Aa</button>
     <div class="tb-sep"></div>
     <button class="tb" onclick="openCheck()" data-i18n-title="checkT">✓</button>
     <button class="tb" onclick="openAI()" data-i18n-title="aiT">AI</button>
@@ -427,7 +429,7 @@ var I18N={
   textModeOn:['文本模式：点击画布放置自由文本，Esc 退出','Text mode: tap the canvas to place text, Esc to exit'],
   textModeOff:['已退出文本模式','Text mode off'],
   shapeModeOn:['图形模式：在画布拖拽绘制','Shape mode: drag on the canvas to draw '], shapeModeOn2:['（单击空白处退出绘制），Esc 退出',' (click empty to exit), Esc to exit'],
-  shapeModeOff:['已退出图形模式','Shape mode off'],
+  shapeModeOff:['已退出图形模式','Shape mode off'], fontScaleT:['画布字体比例','Canvas font scale'],
   boardsTitle:['白板管理','Boards'], newBoard:['＋ 新建白板','+ New board'], exportAllJson:['导出全部 JSON','Export all JSON'],
   importJson:['导入 JSON','Import JSON'], allBoards:['全部白板（','All boards ('], allBoards2:['）',')'],
   currentTag:[' ● 当前',' ● current'], rename:['重命名','Rename'], copy:['复制','Copy'], export:['导出','Export'], del:['删除','Delete'],
@@ -600,7 +602,7 @@ function save(){
 function saveNow(){clearTimeout(saveTimer);try{if(board)board.updatedAt=Date.now();localStorage.setItem(LS,JSON.stringify(store));}catch(e){}}
 function newBoard(name){
   var n=store.boards.length+1;
-  return {id:uid(),name:name||(lang==='en'?'Board '+n:'白板 '+n),topic:'',side:'',format:'',cards:[],texts:[],links:[],shapes:[],view:{x:60,y:60,scale:1},createdAt:Date.now(),updatedAt:Date.now()};
+  return {id:uid(),name:name||(lang==='en'?'Board '+n:'白板 '+n),topic:'',side:'',format:'',cards:[],texts:[],links:[],shapes:[],view:{x:60,y:60,scale:1},fontScale:1,createdAt:Date.now(),updatedAt:Date.now()};
 }
 function tipsCard(){
   return {id:uid(),type:'note',title:lang==='en'?'Quick Tips':'操作提示',text:lang==='en'?'Double-click empty space to start\nDrag empty space to move\nHold a card on another card for 0.3s to auto-link':'双击空白处开始\n拖动空白处移动\n卡片重叠 0.3 秒自动连线',x:120,y:120,done:false,tags:[lang==='en'?'Tips':'操作提示'],color:'',role:'',dur:null};
@@ -648,6 +650,10 @@ function redo(){
 }
 /* ================= 渲染 ================= */
 function render(){
+  $('#world').style.setProperty('--fscale',(board.fontScale||1));
+  var fs=board.fontScale||1;
+  var fb=$('#tbFont');
+  if(fb){fb.classList.toggle('on',fs!==1);fb.title=t('fontScaleT')+' '+(Math.round(fs*100))+'%';}
   renderCards();
   renderTexts();
   renderLinks();
@@ -2422,6 +2428,15 @@ function toggleTextMode(){
   updateModeUI();
   toast(mode==='text'?t('textModeOn'):t('textModeOff'));
 }
+function toggleFontScale(){
+  var arr=[1,1.25,1.5];
+  var cur=board.fontScale||1;
+  var idx=arr.indexOf(cur); if(idx<0)idx=0;
+  var nx=arr[(idx+1)%arr.length];
+  pushUndo();
+  board.fontScale=nx; save(); render();
+  toast(t('fontScaleT')+' '+(Math.round(nx*100))+'%');
+}
 function toggleShape(kind){
   if(mode==='shape'&&shapeKind===kind){
     mode='select';
@@ -3035,6 +3050,7 @@ function openHelp(){
     +'· 卡片面板「辩位（执行人）」：标记一/二/三/四辩或自定义，卡片头部显示金色徽标；体检会检查辩位覆盖，筛选栏可按辩位过滤<br>'
     +'· 工具栏 ▭ / ◯ / ╱（或快捷键 R / C / L）：图形模式，在画布<b>拖拽绘制</b>矩形 / 圆椭圆 / 直线；单击空白处退出绘制；选中后右侧面板可改颜色、虚线，直线支持四种箭头（双击直线快速切换箭头）<br>'
     +'· 工具栏「文」或按 T：文本模式，点击画布放置自由文本（输入完成后自动回到指针模式）<br>'
+    +'· 工具栏「Aa」：循环调整画布字体比例（100% / 125% / 150%），只影响画布内容<br>'
     +'· 工具栏「存 / 载 / 清」：保存本地存档并下载 JSON 备份、载入 JSON 继续工作、一键清空白板（弹窗确认，可撤销）</div></div>'
     +'<h3>连线</h3><div class="field"><div class="hint">'
     +'· 连线类型 = 语义（论证 / 反驳 / 消化 / 反转 / 推论 / 论据 / 并列）<br>'
@@ -3076,6 +3092,7 @@ function openHelp(){
     +'· Card panel "Role (Speaker)": mark 1st/2nd/3rd/4th speaker or custom; a gold badge shows on the card; Prep Check verifies role coverage and the filter bar can filter by role<br>'
     +'· Toolbar ▭ / ◯ / ╱ or shortcuts R / C / L: shape mode — <b>drag to draw</b>; click empty to exit; colors, dashes and (for lines) arrows are in the panel (double-click a line to cycle arrows)<br>'
     +'· Toolbar "文" or T: text mode — click the canvas to place free text (auto returns to pointer mode)<br>'
+    +'· Toolbar "Aa": cycle canvas font scale (100% / 125% / 150%), canvas content only<br>'
     +'· Toolbar 存 / 载 / 清: save locally + download JSON backup, load JSON to continue, clear the board (confirmed, undoable)</div></div>'
     +'<h3>Links</h3><div class="field"><div class="hint">'
     +'· Link type = semantics (Argumentation / Rebuttal / Absorption / Reversal / Inference / Evidence / Parallel)<br>'
