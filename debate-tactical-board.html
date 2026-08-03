@@ -385,7 +385,7 @@ var I18N={
   cardSettings:['卡片设置','Card Settings'], typeF:['类型','Type'], roleF:['辩位（执行人）','Role (Speaker)'],
   customRole:['自定义…','Custom…'], roleCustomPh:['自定义辩位名，如：质询位','Custom role, e.g. Cross-ex'],
   durF:['时长（可选）','Duration (optional)'], durPh:['MM:SS，如 01:30','MM:SS, e.g. 01:30'],
-  durHint:['留空=不显示徽标；也接受纯秒数','Leave empty for no badge; plain seconds also accepted'],
+  durHint:['留空=不显示徽标；也接受纯秒数和全角冒号（01：30）','Leave empty for no badge; plain seconds or full-width colon (01：30) accepted'],
   durBad:['时长格式应为 MM:SS 或秒数','Duration format: MM:SS or seconds'],
   titleF:['标题','Title'], titlePh:['标题','Title'], bodyF:['正文','Body'], bodyPh:['正文内容','Body text'],
   doneF:['已完成（在结构中确认过）','Done (confirmed in structure)'], tagsF:['标签','Tags'], tagsPh:['用顿号 / 逗号分隔','Separate with , / 、'],
@@ -1634,7 +1634,7 @@ function parseDur(v){
   v=String(v||'').trim();
   if(!v)return null;
   if(/^\d+$/.test(v))return parseInt(v,10);
-  var m=v.match(/^(\d{1,3}):([0-5]?\d)$/);
+  var m=v.match(/^(\d{1,3})[:：]([0-5]?\d)$/);
   return m?parseInt(m[1],10)*60+parseInt(m[2],10):null;
 }
 function quickAdd(t){
