@@ -667,7 +667,19 @@ function redo(){
   applySnap(redoStack.pop());
 }
 /* ================= 渲染 ================= */
-var renderBusy=false, renderQueued=false, alignRepair=false;
+var renderBusy=false, renderQueued=false, alignOffset={x:0,y:0}, lastAlignWarn=0;
+function measureAlignOffset(){
+  var c0=board.cards[0];
+  var el0=document.querySelector('#cardLayer .card');
+  if(!c0||!el0){alignOffset={x:0,y:0};return;}
+  var d=el0.getBoundingClientRect();
+  var o=stageOrigin();
+  var fx=o.x+view.x+c0.x*view.scale;
+  var fy=o.y+view.y+c0.y*view.scale;
+  var nx=Math.round(d.left-fx), ny=Math.round(d.top-fy);
+  if(Math.abs(nx)>3000||Math.abs(ny)>3000)return;
+  alignOffset={x:nx,y:ny};
+}
 function checkRenderAlignment(){
   if(!board||!board.cards.length)return;
   var el0=document.querySelector('#cardLayer .card');
@@ -676,9 +688,10 @@ function checkRenderAlignment(){
   var dom=el0.getBoundingClientRect();
   var det=cardScreenRect(c);
   var dy=Math.round(det.t-dom.top), dx=Math.round(det.l-dom.left);
-  if(Math.abs(dy)>2||Math.abs(dx)>2){
+  if((Math.abs(dy)>2||Math.abs(dx)>2)&&performance.now()-lastAlignWarn>1000){
+    lastAlignWarn=performance.now();
     if(window.console)console.warn('[render-alignment]',JSON.stringify({
-      dy:dy,dx:dx,
+      dy:dy,dx:dx,offset:alignOffset,
       view:{x:view.x,y:view.y,s:view.scale},
       css:document.getElementById('world').style.transform,
       stage:{l:stageOrigin().x,t:stageOrigin().y},
@@ -688,7 +701,6 @@ function checkRenderAlignment(){
       cardParent:(el0.parentElement?el0.parentElement.id:'?'),
       url:location.href
     }));
-    if(!alignRepair){alignRepair=true;setTimeout(function(){alignRepair=false;render();render();},0);}
   }
 }
 function render(){
@@ -704,6 +716,7 @@ function render(){
     try{renderLinks();}catch(err){if(window.console)console.error('renderLinks:',err);}
     updateView();
     updateStatus();
+    measureAlignOffset();
     checkRenderAlignment();
   }catch(err){
     if(window.console)console.error('render:',err);
@@ -1560,11 +1573,11 @@ function togglePanel(){
 }
 function screenToWorld(cx,cy){
   var r=$('#stage').getBoundingClientRect();
-  return {x:(cx-r.left-view.x)/view.scale, y:(cy-r.top-view.y)/view.scale};
+  return {x:(cx-r.left-view.x-alignOffset.x)/view.scale, y:(cy-r.top-view.y-alignOffset.y)/view.scale};
 }
 function worldToScreen(x,y){
   var r=$('#stage').getBoundingClientRect();
-  return {x:r.left+view.x+x*view.scale, y:r.top+view.y+y*view.scale};
+  return {x:r.left+view.x+x*view.scale+alignOffset.x, y:r.top+view.y+y*view.scale+alignOffset.y};
 }
 function stageOrigin(){
   var r=$('#stage').getBoundingClientRect();
@@ -2249,7 +2262,7 @@ function updateTextEl(t){
 function cardScreenRect(c){
   var h=cardH[c.id]||90;
   var o=stageOrigin();
-  return {l:o.x+view.x+c.x*view.scale,t:o.y+view.y+c.y*view.scale,r:o.x+view.x+(c.x+cardW(c))*view.scale,b:o.y+view.y+(c.y+h)*view.scale};
+  return {l:o.x+view.x+c.x*view.scale+alignOffset.x,t:o.y+view.y+c.y*view.scale+alignOffset.y,r:o.x+view.x+(c.x+cardW(c))*view.scale+alignOffset.x,b:o.y+view.y+(c.y+h)*view.scale+alignOffset.y};
 }
 function cardAtPoint(px,py,excludeId){
   for(var i=board.cards.length-1;i>=0;i--){
