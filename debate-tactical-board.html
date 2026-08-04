@@ -33,14 +33,15 @@ body.dark .btn-sm.gold{color:#000}
 .hd-right{display:flex;gap:6px;align-items:center}
 
 /* ---------- chipbar ---------- */
-.chipbar{flex-shrink:0;display:flex;align-items:center;gap:6px;padding:8px 12px;background:var(--card);border-bottom:1px solid var(--border);overflow-x:auto;scrollbar-width:thin}
+.chipbar{flex-shrink:0;display:flex;align-items:center;gap:6px;padding:8.5px 12px;background:var(--card);border-bottom:1px solid var(--border);overflow-x:auto;scrollbar-width:thin}
 .chip-label{font-size:11px;color:var(--dark-gray);white-space:nowrap;margin-right:2px}
-.chip{background:var(--input);border:1px solid var(--border);border-radius:14px;padding:4px 11px;font-size:12px;color:var(--text);cursor:pointer;white-space:nowrap;transition:all .15s}
+.chip{background:var(--input);border:1px solid var(--border);border-radius:14px;padding:5px 11px;font-size:12px;color:var(--text);cursor:pointer;white-space:nowrap;transition:all .15s}
 .chip:hover{border-color:var(--gold);color:var(--gold)}
 .chip.on{background:var(--gold);border-color:var(--gold);color:#fff}
 body.dark .chip.on{color:#000}
 .qchip{cursor:grab;touch-action:none}
-.chip-sep{width:1px;height:18px;background:var(--border);margin:0 4px;flex-shrink:0}
+.chip-sep{width:1px;height:20px;background:var(--border);margin:0 8px;flex-shrink:0}
+.pn-sep{border-top:1px solid var(--border);margin:10px 0}
 #filterRow{flex-shrink:0;display:flex;align-items:center;gap:6px;padding:6px 12px;background:var(--card);border-bottom:1px solid var(--border);overflow-x:auto}
 .chip-ghost{position:fixed;z-index:70;pointer-events:none;background:var(--gold);color:#fff;padding:5px 14px;border-radius:16px;font-size:12px;box-shadow:0 4px 14px var(--shadow);white-space:nowrap;transform:translate(-50%,-50%);opacity:.92}
 body.dark .chip-ghost{color:#000}
@@ -161,6 +162,7 @@ body.dark #marquee{background:rgba(255,192,0,.10)}
 .aseg{display:flex;gap:6px}
 .aseg button{flex:1;background:var(--input);border:1px solid var(--border);color:var(--gray);padding:8px 0;border-radius:6px;cursor:pointer;font-size:16px;transition:all .12s}
 .aseg button.on{border-color:var(--gold);color:var(--gold);background:var(--card)}
+.pn-align .aseg button{height:34px;padding:0;line-height:34px;font-size:16px}
 .swatches{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
 .sw{width:22px;height:22px;border-radius:50%;border:2px solid var(--border);cursor:pointer;flex-shrink:0}
 .sw.on{border-color:var(--gold);transform:scale(1.15)}
@@ -318,6 +320,7 @@ var TYPES={
   point:{name:'分论点',en:'Sub-Argument',color:'#2ea86b',icon:'📌'},
   evidence:{name:'论据',en:'Evidence',color:'#1aa6a0',icon:'📎'},
   infer:{name:'推论',en:'Inference',color:'#9b59b6',icon:'🧩'},
+  burden:{name:'举证责任/论证义务',en:'Burden of Proof',color:'#b5651d',icon:'📜'},
   value:{name:'价值点',en:'Value Point',color:'#e67e22',icon:'💎'},
   opp:{name:'对方论点',en:'Opponent Argument',color:'#d64545',icon:'⚠️'},
   rebut:{name:'反驳',en:'Rebuttal',color:'#e53935',icon:'🗡'},
@@ -327,13 +330,21 @@ var TYPES={
   tactic:{name:'战术·环节',en:'Tactic · Segment',color:'#7f8c8d',icon:'🎬'},
   need:{name:'需要性',en:'Need',color:'#c0392b',icon:'🏥'},
   root:{name:'根属性',en:'Inherency',color:'#d35400',icon:'🌱'},
+  plan:{name:'计划·方案',en:'Plan · Proposal',color:'#2e86ab',icon:'📋'},
+  feasible:{name:'可行性',en:'Feasibility',color:'#7d9c3f',icon:'🔧'},
   solve:{name:'解决力',en:'Solvency',color:'#27ae60',icon:'💊'},
   cost:{name:'损益比',en:'Cost-Benefit',color:'#16a085',icon:'⚖️'},
-  note:{name:'备注',en:'Note',color:'#8a9299',icon:'📝'}
+  topical:{name:'合题性',en:'Topicality',color:'#7d3c98',icon:'📍'},
+  altplan:{name:'替代方案',en:'Alternative Plan',color:'#8d6e63',icon:'🔁'},
+  minorfix:{name:'小幅度修改',en:'Minor Repair',color:'#8395a7',icon:'🩹'},
+  pureopp:{name:'纯粹反对',en:'Pure Opposition',color:'#b03a2e',icon:'🚫'},
+  presume:{name:'推定',en:'Presumption',color:'#34495e',icon:'⚓'},
+  note:{name:'备注',en:'Note',color:'#8a9299',icon:'📝'},
+  custom:{name:'自定义',en:'Custom',color:'#6b7280',icon:'✨'}
 };
-var TYPE_ORDER=['evidence','infer','topic','def','scope','b0','point','value','opp','rebut','absorb','reverse','mainline','tactic','need','root','solve','cost','note'];
-var QUICK_TYPES=['topic','def','scope','b0','point','evidence','infer','value','opp','rebut','absorb','reverse','mainline','tactic','note'];
-var TYPE_GROUPS=[['论证',['evidence','infer']],['立论',['topic','def','scope','b0','point','value']],['交锋',['opp','rebut','absorb','reverse','mainline','tactic']],['奥瑞冈',['need','root','solve','cost']],['其他',['note']]];
+var TYPE_ORDER=['evidence','infer','burden','topic','def','scope','b0','point','value','opp','rebut','absorb','reverse','mainline','tactic','need','root','solve','cost','plan','presume','topical','feasible','pureopp','minorfix','altplan','note','custom'];
+var QUICK_TYPES=['topic','def','scope','b0','point','value','evidence','infer','opp','rebut','absorb','reverse','mainline','tactic','note'];
+var TYPE_GROUPS=[['论证',['evidence','infer','burden']],['立论',['topic','def','scope','b0','point','value']],['交锋',['opp','rebut','absorb','reverse','mainline','tactic']],['奥瑞冈',['need','root','solve','cost','__sep','plan','presume','topical','feasible','__sep','pureopp','minorfix','altplan']],['其它',['note','custom']]];
 var LINK_TYPES={
   '':{name:'未定',en:'Unset',color:'#999'},
   argue:{name:'论证',en:'Argumentation',color:'#4caf50'},
@@ -353,6 +364,7 @@ function cardW(c){return c&&c.w?Math.max(160,c.w):CARD_W;}
 var TAG_KEYS={'事实层':'tagFact','逻辑层':'tagLogic','价值层':'tagValue','已预判':'tagPredicted','存疑':'tagQuestioned','防守':'tagDefense','进攻':'tagAttack'};
 function roleName(r){if(!r)return '';if(ROLE_NAMES[r])return lang==='en'?ROLE_NAMES[r].en:ROLE_NAMES[r].zh;return r;}
 function typeName(t){var tt=TYPES[t];if(!tt)return lang==='en'?'Untyped':(t?'未分类':'无属性');return lang==='en'?(tt.en||tt.name):tt.name;}
+function cardTypeName(c){return (c&&c.type==='custom'&&c.typeCustom)?c.typeCustom:typeName(c&&c.type);}
 function linkName(k){var lt=LINK_TYPES[k]||LINK_TYPES[''];return lang==='en'?(lt.en||lt.name):lt.name;}
 function tagName(tg){var k=TAG_KEYS[tg];return k?t(k):tg;}
 
@@ -385,6 +397,7 @@ var I18N={
   cardSettings:['卡片设置','Card Settings'], typeF:['类型','Type'], roleF:['辩位（执行人）','Role (Speaker)'],
   customRole:['自定义…','Custom…'], roleCustomPh:['自定义辩位名，如：质询位','Custom role, e.g. Cross-ex'],
   durF:['时长（可选）','Duration (optional)'], durPh:['MM:SS，如 01:30','MM:SS, e.g. 01:30'],
+  typeCustomF:['自定义类型名','Custom type name'], typeCustomPh:['例如：战术卡 / 战场名','e.g. Tactic / Battlefield'],
   durHint:['留空=不显示徽标；也接受纯秒数和全角冒号（01：30）','Leave empty for no badge; plain seconds or full-width colon (01：30) accepted'],
   durBad:['时长格式应为 MM:SS 或秒数','Duration format: MM:SS or seconds'],
   titleF:['标题','Title'], titlePh:['标题','Title'], bodyF:['正文','Body'], bodyPh:['正文内容','Body text'],
@@ -453,6 +466,7 @@ var I18N={
   checkNoClash:['有对方论点但没有消化/反转卡——1 型主线风险（A6）。','Opponent arguments exist but no Absorption/Reversal cards — Type-1 Mainline risk (A6).'],
   checkOppNoLink:['对方论点还没有挂消化/反转连线。','Opponent arguments have no Absorption/Reversal links yet.'],
   checkNoMainline:['没有主线卡（A7）——预判 1 型 / 2 型主线。','No Mainline card (A7) — predict Type 1/2 mainline.'],
+  checkOregonMiss:['奥瑞冈结构缺：','Oregon structure missing: '],
   checkIsolated:[' 张孤立卡片未接入连线结构。',' isolated cards not linked into the structure.'],
   checkUntypedN:[' 张未分类卡片。',' untyped cards.'],
   checkNoRole:['还没有卡片标记辩位（执行人）——可在卡片面板选择一/二/三/四辩或自定义。','No cards have a role (speaker) assigned yet — set 1st/2nd/3rd/4th or custom in the card panel.'],
@@ -489,9 +503,9 @@ var I18N={
   mdSecArg:['论证（论据与推论）','Argumentation (Evidence & Inference)'], mdSecTopic:['辩题与定义','Motion & Definitions'],
   mdSecScope:['讨论范围','Scope of Discussion'], mdSecCase:['立论架构','Case Architecture'],
   mdSecClash:['交锋（攻防 · 结构性交锋 · 收束）','Clash (Attack-Defense · Structural Clash · Wrap-up)'],
-  mdSecOregon:['奥瑞冈要素','Oregon Elements'], mdSecOther:['其他','Others'],
+  mdSecOregon:['奥瑞冈要素','Oregon Elements'], mdSecOther:['其它','Others'],
   grpArgue:['论证','Argumentation'], grpCase:['立论','Case Construction'], grpClash:['交锋','Clash'],
-  grpOregon:['奥瑞冈','Oregon'], grpOther:['其他','Others'],
+  grpOregon:['奥瑞冈','Oregon'], grpOther:['其它','Others'],
   snapBoard:['战术板：','Board: '], snapMotion:['辩题：','Motion: '], snapSide:['持方：','Side: '], snapFormat:['赛制：','Format: '],
   snapTags:['标签：','Tags: '], snapYes:['是','yes'], snapNo:['否','no'],
   snapLink:['连线：','Link: '], snapNote:['批注：','Note: '],
@@ -505,6 +519,17 @@ var I18N={
   ,fillMissing2:['）',')']
   ,aiReqFail:['AI 请求失败','AI request failed']
   ,aiReqErr:['AI 请求出错','AI request error']
+  ,alignTitle:['对齐与分布','Align & Distribute']
+  ,alignLeft:['左对齐','Align left'], alignHCenter:['水平居中','Center horizontally'], alignRight:['右对齐','Align right']
+  ,alignTop:['顶对齐','Align top'], alignVCenter:['垂直居中','Center vertically'], alignBottom:['底对齐','Align bottom']
+  ,distH:['水平等距','Distribute H'], distV:['垂直等距','Distribute V']
+  ,gridSnap:['网格吸附 24px','Snap to grid 24px']
+  ,alignNeedTwo:['请至少选中 2 张卡片或自由文本','Select at least 2 cards or free texts']
+  ,alignHint:['作用于选中的卡片/自由文本；Ctrl+Z 可撤销','Applies to selected cards/texts; Ctrl+Z to undo']
+  ,alignedOk:['已对齐/分布 ','Aligned/distributed ']
+  ,alignedOk2:[' 个元素（Ctrl+Z 可撤销）',' items (Ctrl+Z to undo)']
+  ,gridSnapOn:['网格吸附：开，已吸附当前选中','Grid snap: on; selection snapped']
+  ,gridSnapOff:['网格吸附：关','Grid snap: off']
   ,capSaved:['已导出，文件保存在应用文档目录：','Exported. Saved to app documents: ']
   ,exportShareTitle:['辩论教练导出','Debate Coach export']
   ,exportShareText:['导出的辩论记录','Exported debate record']
@@ -561,6 +586,14 @@ function suggestLinkType(a,b){
   if(a==='point'&&b==='point')return 'infer';
   if((a==='point'&&b==='b0')||(a==='b0'&&b==='point'))return 'argue';
   if((a==='b0'&&b==='topic')||(a==='topic'&&b==='b0'))return 'argue';
+  if((a==='plan'&&b==='solve')||(a==='solve'&&b==='plan'))return 'argue';
+  if((a==='plan'&&b==='feasible')||(a==='feasible'&&b==='plan'))return 'argue';
+  if((a==='plan'&&b==='topical')||(a==='topical'&&b==='plan'))return 'argue';
+  if((a==='plan'&&b==='altplan')||(a==='altplan'&&b==='plan'))return 'parallel';
+  if((a==='altplan'&&b==='minorfix')||(a==='minorfix'&&b==='altplan'))return 'rebut';
+  if((a==='pureopp'&&b==='plan')||(a==='plan'&&b==='pureopp'))return 'rebut';
+  if((a==='presume'&&b==='need')||(a==='need'&&b==='presume'))return 'rebut';
+  if(a==='burden'||b==='burden')return 'argue';
   return 'argue';
 }
 
@@ -774,6 +807,7 @@ function renderChipbar(){
   var h='<span class="chip-label">'+t('quickAddLabel')+'</span>';
   QUICK_TYPES.forEach(function(tk){
     h+='<button class="chip qchip" data-type="'+tk+'" title="'+(lang==='en'?'Click to add, or drag onto the canvas':'点击建卡，或按住拖到画布任意位置')+'">'+(TYPES[tk].icon?TYPES[tk].icon+' ':'')+esc(typeName(tk))+'</button>';
+    if(tk==='value'||tk==='infer'||tk==='reverse')h+='<span class="chip-sep"></span>';
   });
   $('#chipbar').innerHTML=h;
 }
@@ -804,7 +838,7 @@ function onSearch(v){q=v.trim();render();}
 
 function matchCard(c){
   if(q){
-    var hay=((c.title||'')+' '+(c.text||'')+' '+(Array.isArray(c.tags)?c.tags.join(' '):'')+' '+typeName(c.type)+' '+roleName(c.role)).toLowerCase();
+    var hay=((c.title||'')+' '+(c.text||'')+' '+(Array.isArray(c.tags)?c.tags.join(' '):'')+' '+cardTypeName(c)+' '+roleName(c.role)).toLowerCase();
     if(hay.indexOf(q.toLowerCase())<0)return false;
   }
   if(typeFilter.size){
@@ -837,7 +871,7 @@ function renderCards(){
     if(c.h)cls.push('hfix');
     if(drag&&drag.mode==='group'&&drag.items.some(function(it){return it.kind==='card'&&it.id===c.id;}))cls.push('dragging');
     h+='<div class="'+cls.join(' ')+'" data-id="'+c.id+'" style="left:'+c.x+'px;top:'+c.y+'px;width:'+cardW(c)+'px'+(c.h?';height:'+c.h+'px':'')+';border-left-color:'+col+'">'
-      +'<div class="card-head"><span class="c-ico">'+(t?t.icon:'❔')+'</span><span class="c-type" style="color:'+col+'">'+esc(typeName(c.type))+'</span>'+(c.role?'<span class="c-role" title="'+(lang==='en'?'Role (Speaker)':'辩位（执行人）')+'">'+esc(roleName(c.role))+'</span>':'')+(c.dur?'<span class="c-dur" title="'+(lang==='en'?'Duration':'时长')+'">'+fmtDur(c.dur)+'</span>':'')+(c.done?'<span class="c-done">✔</span>':'')+(c.fold||(c.text&&c.text.length)?'<span class="fold-btn" title="'+(lang==='en'?(c.fold?'Expand':'Collapse'):(c.fold?'展开':'折叠'))+'">'+(c.fold?'▸':'▾')+'</span>':'')+'</div>'
+      +'<div class="card-head"><span class="c-ico">'+(t?t.icon:'❔')+'</span><span class="c-type" style="color:'+col+'">'+esc(cardTypeName(c))+'</span>'+(c.role?'<span class="c-role" title="'+(lang==='en'?'Role (Speaker)':'辩位（执行人）')+'">'+esc(roleName(c.role))+'</span>':'')+(c.dur?'<span class="c-dur" title="'+(lang==='en'?'Duration':'时长')+'">'+fmtDur(c.dur)+'</span>':'')+(c.done?'<span class="c-done">✔</span>':'')+(c.fold||(c.text&&c.text.length)?'<span class="fold-btn" title="'+(lang==='en'?(c.fold?'Expand':'Collapse'):(c.fold?'展开':'折叠'))+'">'+(c.fold?'▸':'▾')+'</span>':'')+'</div>'
       +'<div class="c-title" data-ph="'+(lang==='en'?'(Double-click to edit title)':'（双击编辑标题）')+'">'+esc(c.title||'')+'</div>'
       +'<div class="c-body" data-ph="'+(lang==='en'?'(Body)':'（正文）')+'">'+esc(c.text||'')+'</div>'
       +((c.tags&&c.tags.length)?'<div class="c-tags">'+(c.tags||[]).map(function(x){return '<span class="c-tag">#'+esc(x)+'</span>';}).join('')+'</div>':'')
@@ -1047,6 +1081,7 @@ function panelCard(c){
     var glabel=g[0]==='论证'?t('grpArgue'):g[0]==='立论'?t('grpCase'):g[0]==='交锋'?t('grpClash'):g[0]==='奥瑞冈'?t('grpOregon'):t('grpOther');
     typeOpts+='<optgroup label="'+glabel+'">';
     g[1].forEach(function(t2){
+      if(t2==='__sep'){typeOpts+='<option disabled>──────────</option>';return;}
       typeOpts+='<option value="'+t2+'"'+(c.type===t2?' selected':'')+'>'+esc(typeName(t2))+'</option>';
     });
     typeOpts+='</optgroup>';
@@ -1065,7 +1100,8 @@ function panelCard(c){
   });
   roleOpts+='<option value="__custom"'+(isCustomRole?' selected':'')+'>'+t('customRole')+'</option>';
   return '<div class="pn-title">'+t('cardSettings')+'</div>'
-    +'<div class="field"><label>'+t('typeF')+'</label><select onchange="pCardType(this.value)">'+typeOpts+'</select></div>'
+    +'<div class="field"><label>'+t('typeF')+'</label><select onchange="pCardType(this.value);pTypeCustomToggle()">'+typeOpts+'</select></div>'
+    +'<div class="field'+(c.type==='custom'?'':' hidden')+'" id="pTypeCustomWrap"><label>'+t('typeCustomF')+'</label><input type="text" id="pTypeCustom" value="'+esc(c.typeCustom||'')+'" placeholder="'+t('typeCustomPh')+'" oninput="pTypeCustomSet(this.value)"></div>'
     +'<div class="field"><label>'+t('roleF')+'</label><select id="pRole" onchange="pRoleChange(this.value)">'+roleOpts+'</select>'
     +'<div id="pRoleCustomWrap"'+(isCustomRole?'':' class="hidden"')+' style="margin-top:6px"><input type="text" id="pRoleCustom" value="'+(isCustomRole?esc(c.role):'')+'" placeholder="'+t('roleCustomPh')+'" onchange="pRoleCustomApply(this.value)"></div></div>'
     +'<div class="field"><label>'+t('durF')+'</label><input type="text" id="pDur" value="'+(c.dur?fmtDur(c.dur):'')+'" placeholder="'+t('durPh')+'" inputmode="numeric" onchange="pDurSet(this.value)"><div class="hint">'+t('durHint')+'</div></div>'
@@ -1148,7 +1184,10 @@ function panelMulti(){
   TYPE_GROUPS.forEach(function(g){
     var glabel=g[0]==='论证'?t('grpArgue'):g[0]==='立论'?t('grpCase'):g[0]==='交锋'?t('grpClash'):g[0]==='奥瑞冈'?t('grpOregon'):t('grpOther');
     typeOpts+='<optgroup label="'+glabel+'">';
-    g[1].forEach(function(tk){typeOpts+='<option value="'+tk+'">'+esc(typeName(tk))+'</option>';});
+    g[1].forEach(function(tk){
+      if(tk==='__sep'){typeOpts+='<option disabled>──────────</option>';return;}
+      typeOpts+='<option value="'+tk+'">'+esc(typeName(tk))+'</option>';
+    });
     typeOpts+='</optgroup>';
   });
   var sw='<div class="sw auto" title="'+(lang==='en'?'All follow their own type':'全部跟随各自类型')+'" onclick="pBatchColor(\'\')"></div>';
@@ -1175,6 +1214,26 @@ function panelMulti(){
   if(shapes.length){
     html+='<div class="field"><label>'+t('batchDashF')+'</label><select onchange="pBatchDash(this.value)"><option value="">'+t('noChange')+'</option><option value="yes">'+t('allDashed')+'</option><option value="no">'+t('allSolid')+'</option></select></div>';
   }
+  if(cards.length+texts.length>=2){
+    html+='<div class="pn-sep"></div>';
+    html+='<div class="field pn-align" style="margin-top:8px"><label>'+t('alignTitle')+'</label>'
+      +'<div class="aseg">'
+      +'<button class="btn-sm" title="'+t('alignLeft')+'" onclick="alignApply(\'left\')">⇤</button>'
+      +'<button class="btn-sm" title="'+t('alignHCenter')+'" onclick="alignApply(\'hcenter\')">↔</button>'
+      +'<button class="btn-sm" title="'+t('alignRight')+'" onclick="alignApply(\'right\')">⇥</button>'
+      +'<button class="btn-sm" title="'+t('alignTop')+'" onclick="alignApply(\'top\')">⤒</button>'
+      +'<button class="btn-sm" title="'+t('alignVCenter')+'" onclick="alignApply(\'vcenter\')">↕</button>'
+      +'<button class="btn-sm" title="'+t('alignBottom')+'" onclick="alignApply(\'bottom\')">⤓</button>'
+      +'</div>'
+      +'<div class="aseg" style="margin-top:4px">'
+      +'<button class="btn-sm" title="'+t('distH')+'" onclick="alignApply(\'disth\')">❘❘❘</button>'
+      +'<button class="btn-sm" title="'+t('distV')+'" onclick="alignApply(\'distv\')">≡</button>'
+      +'<button class="btn-sm'+(board.gridSnap?' on':'')+'" title="'+t('gridSnap')+'" onclick="alignGridToggle()">▦</button>'
+      +'</div>'
+      +'<div class="hint" style="font-size:12px;color:var(--gray)">'+t('alignHint')+'</div>'
+      +'</div>';
+    html+='<div class="pn-sep"></div>';
+  }
   html+='<div class="field"><label>'+t('batchColor')+(cards.length&&shapes.length?' '+t('batchColorBoth'):'')+'</label><div class="swatches">'+sw+'</div></div>'
     +'<div class="pn-btns">'
     +'<button class="btn-sm" onclick="duplicateSelection()">'+t('dupInPlace')+'</button>'
@@ -1184,6 +1243,62 @@ function panelMulti(){
     +'<button class="btn-sm" onclick="clearSel()">'+t('cancelSel')+'</button>'
     +'</div>';
   return html;
+}
+/* ================= 对齐与分布（测试） ================= */
+function alignItems(){
+  var out=[];
+  sel.ids.forEach(function(id){
+    var c=cardById(id);
+    if(c){out.push({kind:'card',obj:c,x:c.x,y:c.y,w:cardW(c),h:cardH[id]||90});return;}
+    var tx=textById(id);
+    if(tx){var sz=textSizes[tx.id]||{w:160,h:40};out.push({kind:'text',obj:tx,x:tx.x,y:tx.y,w:sz.w,h:sz.h});}
+  });
+  return out;
+}
+function alignSnap(v){return board.gridSnap?Math.round(v/24)*24:v;}
+function alignApply(op){
+  var items=alignItems();
+  if(items.length<2){toast(t('alignNeedTwo'));return;}
+  pushUndo();
+  var minX=1e9,minY=1e9,maxX=-1e9,maxY=-1e9;
+  items.forEach(function(it){minX=Math.min(minX,it.x);minY=Math.min(minY,it.y);maxX=Math.max(maxX,it.x+it.w);maxY=Math.max(maxY,it.y+it.h);});
+  if(op==='left'||op==='hcenter'||op==='right'){
+    items.forEach(function(it){
+      var nx=op==='left'?minX:(op==='right'?maxX-it.w:minX+(maxX-minX)/2-it.w/2);
+      it.obj.x=alignSnap(Math.round(nx));
+    });
+  }else if(op==='top'||op==='vcenter'||op==='bottom'){
+    items.forEach(function(it){
+      var ny=op==='top'?minY:(op==='bottom'?maxY-it.h:minY+(maxY-minY)/2-it.h/2);
+      it.obj.y=alignSnap(Math.round(ny));
+    });
+  }else if(op==='disth'){
+    var s1=items.slice().sort(function(a,b){return a.x-b.x;});
+    var tw=0;s1.forEach(function(it){tw+=it.w;});
+    var gap=(maxX-minX-tw)/(s1.length-1);
+    var cur=minX;
+    s1.forEach(function(it){it.obj.x=alignSnap(Math.round(cur));cur+=it.w+gap;});
+  }else if(op==='distv'){
+    var s2=items.slice().sort(function(a,b){return a.y-b.y;});
+    var th=0;s2.forEach(function(it){th+=it.h;});
+    var gap=(maxY-minY-th)/(s2.length-1);
+    var cur=minY;
+    s2.forEach(function(it){it.obj.y=alignSnap(Math.round(cur));cur+=it.h+gap;});
+  }else{return;}
+  save();render();renderPanel();
+  toast(t('alignedOk')+items.length+t('alignedOk2'));
+}
+function alignGridToggle(){
+  board.gridSnap=!board.gridSnap;
+  if(board.gridSnap)alignGrid();else{save();renderPanel();toast(t('gridSnapOff'));}
+}
+function alignGrid(){
+  var items=alignItems();
+  if(!items.length){toast(t('alignNeedTwo'));return;}
+  pushUndo();
+  items.forEach(function(it){it.obj.x=Math.round(it.x/24)*24;it.obj.y=Math.round(it.y/24)*24;});
+  save();render();renderPanel();
+  toast(t('gridSnapOn'));
 }
 
 /* ================= 面板操作 ================= */
@@ -1201,6 +1316,17 @@ function pCardType(v){
   if(editing)commitActive();
   pushUndo();
   c.type=v; updateLinksAuto(); save(); render(); renderPanel();
+}
+function pTypeCustomToggle(){
+  var w=document.getElementById('pTypeCustomWrap');
+  if(w)w.classList.toggle('hidden',(selCard()||{}).type!=='custom');
+}
+function pTypeCustomSet(v){
+  var c=selCard(); if(!c)return;
+  if(editing)commitActive();
+  fieldUndo('typeCustom');
+  c.typeCustom=(v||'').trim();
+  save(); render();
 }
 function pRoleChange(v){
   var c=selCard(); if(!c)return;
@@ -1456,7 +1582,7 @@ function duplicateSelection(){
   var off=36;
   board.cards.forEach(function(c){
     if(sel.ids.indexOf(c.id)<0)return;
-    var n={id:uid(),type:c.type,title:c.title,text:c.text,x:c.x+off,y:c.y+off,done:c.done,tags:(c.tags||[]).slice(),color:c.color,role:c.role,dur:c.dur,w:c.w,h:c.h,fold:c.fold};
+    var n={id:uid(),type:c.type,typeCustom:c.typeCustom||'',title:c.title,text:c.text,x:c.x+off,y:c.y+off,done:c.done,tags:(c.tags||[]).slice(),color:c.color,role:c.role,dur:c.dur,w:c.w,h:c.h,fold:c.fold};
     map[c.id]=n.id; nids.push(n.id);
     board.cards.push(n);
   });
@@ -1536,7 +1662,7 @@ function pasteClip(){
   if(minx===1e9){minx=0;miny=0;}
   var map={},nids=[];
   clipData.cards.forEach(function(c){
-    var n={id:uid(),type:c.type,title:c.title,text:c.text,x:base.x+(c.x-minx)+ox,y:base.y+(c.y-miny)+oy,done:c.done,tags:(c.tags||[]).slice(),color:c.color,role:c.role,dur:c.dur};
+    var n={id:uid(),type:c.type,typeCustom:c.typeCustom||'',title:c.title,text:c.text,x:base.x+(c.x-minx)+ox,y:base.y+(c.y-miny)+oy,done:c.done,tags:(c.tags||[]).slice(),color:c.color,role:c.role,dur:c.dur};
     map[c.id]=n.id;nids.push(n.id);board.cards.push(n);
   });
   clipData.texts.forEach(function(t){
@@ -1623,7 +1749,7 @@ function stageOrigin(){
   return {x:r.left,y:r.top};
 }
 function newCard(x,y,type){
-  return {id:uid(),type:type||'',title:'',text:'',x:x,y:y,done:false,tags:[],color:'',dur:null};
+  return {id:uid(),type:type||'',typeCustom:'',title:'',text:'',x:x,y:y,done:false,tags:[],color:'',dur:null};
 }
 function fmtDur(sec){
   sec=Math.max(0,Math.round(sec||0));
@@ -2880,6 +3006,11 @@ function buildCheck(){
   if(byType.opp.length&&!board.links.some(function(l){return (l.type==='absorb'||l.type==='reverse')&&(l.from&&l.to);}))
     info(t('checkOppNoLink'),null);
   if(!byType.mainline.length)info(t('checkNoMainline'),null);
+  var hasOregon=['need','root','plan','feasible','solve','cost'].some(function(t){return byType[t].length;});
+  if(hasOregon){
+    var om=['need','root','plan','solve'].filter(function(t){return !byType[t].length;}).map(typeName);
+    if(om.length)info(t('checkOregonMiss')+om.join(' / '),null);
+  }
   var unlinked=board.cards.filter(function(c){return !board.links.some(function(l){return l.from===c.id||l.to===c.id;});});
   if(unlinked.length)info(lang==='en'?unlinked.length+t('checkIsolated'):'有 '+unlinked.length+t('checkIsolated'),unlinked[0]?unlinked[0].id:null);
   var untyped=board.cards.filter(function(c){return !c.type;});
@@ -2934,7 +3065,7 @@ function buildMarkdown(){
     L.push('## '+sec[0]);
     L.push('');
     cards.forEach(function(c){
-      L.push('### '+(c.done?'[✓] ':'[ ] ')+(c.title||(lang==='en'?'(untitled)':'(无标题)'))+'（'+typeName(c.type)+(c.role?' · '+roleName(c.role):'')+(c.dur?' · '+fmtDur(c.dur):'')+'）');
+    L.push('### '+(c.done?'[✓] ':'[ ] ')+(c.title||(lang==='en'?'(untitled)':'(无标题)'))+'（'+cardTypeName(c)+(c.role?' · '+roleName(c.role):'')+(c.dur?' · '+fmtDur(c.dur):'')+'）');
       if(c.text){L.push('');c.text.split('\n').forEach(function(line){L.push(line);});}
       if(c.tags&&c.tags.length)L.push(t('mdTags')+(c.tags||[]).map(tagName).join('、'));
       var outs=board.links.filter(function(l){return l.from===c.id;});
@@ -2965,7 +3096,7 @@ function buildMarkdown(){
   if(unlinked.length){
     L.push('## '+t('mdUnlinked'));
     L.push('');
-    unlinked.forEach(function(c){L.push('- '+(c.title||(lang==='en'?'(untitled)':'(无标题)'))+'（'+typeName(c.type)+'）');});
+    unlinked.forEach(function(c){L.push('- '+(c.title||(lang==='en'?'(untitled)':'(无标题)'))+'（'+cardTypeName(c)+'）');});
     L.push('');
   }
   return L.join('\n');
@@ -3088,7 +3219,7 @@ function exportPNG(opts){
     rr(ctx,x,y,5,ht,0);ctx.fill();
     ctx.fillStyle=col;ctx.font='12px '+FONT;ctx.textBaseline='top';
     ctx.fillText(t?t.icon:'❔',x+12,y+9);
-    ctx.fillText(typeName(c.type)+(c.role?' · '+roleName(c.role):'')+(c.dur?' · '+fmtDur(c.dur):''),x+30,y+10);
+    ctx.fillText(cardTypeName(c)+(c.role?' · '+roleName(c.role):'')+(c.dur?' · '+fmtDur(c.dur):''),x+30,y+10);
     if(c.done){ctx.fillStyle=dark?'#6ecd71':'#2ea86b';ctx.font='bold 13px '+FONT;ctx.fillText('✓',x+cw-20,y+8);}
     ctx.fillStyle=dark?'#eee':'#222';ctx.font='bold 14px '+FONT;
     var ty=y+34;
@@ -3345,7 +3476,7 @@ function aiSnapshot(){
     return ia-ib||a.createdAt-b.createdAt;
   });
   cards.forEach(function(c){
-    L.push('【'+typeName(c.type)+(c.role?' · '+roleName(c.role):'')+'】'+(c.title||(lang==='en'?'(untitled)':'(无标题)')));
+    L.push('【'+cardTypeName(c)+(c.role?' · '+roleName(c.role):'')+'】'+(c.title||(lang==='en'?'(untitled)':'(无标题)'))); 
     if(c.text)L.push(c.text);
     L.push(t('snapTags')+((c.tags&&c.tags.length)?c.tags.map(tagName).join('、'):(lang==='en'?'none':'无'))+' | '+(lang==='en'?'Done: ':'完成：')+(c.done?(lang==='en'?'yes':'是'):(lang==='en'?'no':'否'))+(c.dur?' | '+(lang==='en'?'Dur: ':'时长：')+fmtDur(c.dur):''));
     L.push('');
