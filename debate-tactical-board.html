@@ -428,6 +428,7 @@ var I18N={
   noUndo:['没有可撤销的操作','Nothing to undo'], noRedo:['没有可重做的操作','Nothing to redo'],
   selFirst:['先选中卡片、文本或连线','Select cards, text or links first'], cannotCopy:['当前所选内容无法复制','Selected content cannot be copied'],
   copied:['已复制 ','Copied '], cardsUnit:[' 张卡片',' cards'], textsUnit:[' 段文本',' texts'], shapesUnit:[' 个图形',' shapes'],
+  linesUnit:[' 根连线',' links'],
   cutToast:['已剪切 ','Cut '], clipEmpty:['剪贴板为空：先 Ctrl+C 复制卡片','Clipboard empty: press Ctrl+C first'],
   pasted:['已粘贴 ','Pasted '], alreadyLinked:['这两张卡已有连线','These two cards are already linked'],
   linked:['已连线','Linked'], autoLinked:['已自动连线：','Auto-linked: '],
@@ -1640,13 +1641,23 @@ function cutSelectionToClip(){
   if(!d){toast(t('cannotCopy'));return;}
   pushUndo();
   clipData=d;pasteCount=0;pasteBase=null;
-  board.cards=board.cards.filter(function(c){return ids.indexOf(c.id)<0;});
-  board.texts=board.texts.filter(function(t){return ids.indexOf(t.id)<0;});
-  board.shapes=board.shapes.filter(function(s){return ids.indexOf(s.id)<0;});
-  board.links=board.links.filter(function(l){return ids.indexOf(l.from)<0||ids.indexOf(l.to)<0;});
+  // 剪切：仅删除真正选中的实体；连线带入的端点卡片保留。
+  var delIds=sel.ids.slice();
+  var objIds=sel.ids.filter(function(id){return !linkById(id);});
+  board.links.forEach(function(l){
+    if(objIds.indexOf(l.from)>=0||objIds.indexOf(l.to)>=0)delIds.push(l.id);
+  });
+  var cutCards=0,cutShapes=0,cutLinks=0;
+  board.cards.forEach(function(c){if(delIds.indexOf(c.id)>=0)cutCards++;});
+  board.shapes.forEach(function(s){if(delIds.indexOf(s.id)>=0)cutShapes++;});
+  board.links.forEach(function(l){if(delIds.indexOf(l.id)>=0)cutLinks++;});
+  board.cards=board.cards.filter(function(c){return delIds.indexOf(c.id)<0;});
+  board.texts=board.texts.filter(function(t){return delIds.indexOf(t.id)<0;});
+  board.shapes=board.shapes.filter(function(s){return delIds.indexOf(s.id)<0;});
+  board.links=board.links.filter(function(l){return delIds.indexOf(l.id)<0;});
   sel={kind:'none',ids:[]};
   save();render();renderPanel();
-  toast(t('cutToast')+d.cards.length+t('cardsUnit')+(d.shapes.length?' / '+d.shapes.length+t('shapesUnit'):'')+'（Ctrl+V）');
+  toast(t('cutToast')+(cutCards?cutCards+t('cardsUnit'):'')+(cutShapes?' / '+cutShapes+t('shapesUnit'):'')+(cutLinks?' / '+cutLinks+t('linesUnit'):'')+'（Ctrl+V）');
 }
 function pasteClip(){
   if(!clipData||(!clipData.cards.length&&!clipData.texts.length&&!clipData.shapes.length)){toast(t('clipEmpty'));return;}
