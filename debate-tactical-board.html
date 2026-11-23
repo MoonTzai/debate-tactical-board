@@ -365,6 +365,318 @@ var cfg=read();emit(cfg);
 window.__TBX={P:P,A:A,F:F,emit:emit,read:read,tokens:tokens,tokensFor:tokensFor,setShare:setShare,getShare:getShare};
 })();
 </script>
+<script>
+/*
+COACH_FILE_IO_ARCHITECTURE_CONTRACT_BEGIN
+R01 SINGLE-FILE COACH FILE DELIVERY CONTRACT (source-owned, not a help page).
+SCOPE: createCoachFileIO(environment) is the one shared file delivery/receipt service,
+installed as window.DCFileIO in the executable Coach shell. AI Recorder is excluded.
+OWNERSHIP: Module producers alone own payload bytes, original name, MIME, JSON
+schema, IDs, links, history, session state and import validation/commit.
+The service accepts a canonical Blob once; it does NOT serialize JSON, repair
+invalid inputs, alter report content, commit a project, or inspect prompts.
+API: present(PreparedFile) offers supported actions; deliver(PreparedFile,
+'download'|'share'|'save-local') performs exactly one intent; openPreview()
+starts read-only HTML preview; standaloneSource() emits this same self-contained
+factory for Atlas/Startrack offline reports. PreparedFile: {blob,name,mime,kind,
+owner,lang,nativeLocation:{directory,folder},profile:'ordinary'|'timer'}.
+Receipt.status: download-started, preview-open-started, share-returned, saved,
+cancelled, share-not-completed, unsupported, failed. A resolved Promise or an
+anchor.click does not establish that the destination file was saved.
+WEB: iOS HTTPS uses navigator.share({files:[File]}) ONLY, never title/text;
+JSON/MD may use text/plain MIME without changing extension. Android Web JSON/MD
+share uses byte-identical .json.txt/.md.txt and text/plain regardless of
+canShare(original); original extension is retained for downloads. Unsupported
+Web Share falls back to a *user-selected* download, not a silent retry. Explicit
+cancellation/failure NEVER auto-downloads. Asynchronously prepared exports wait
+for a NEW user click before Web Share; no await before navigator.share.
+NATIVE: Use existing Capacitor Filesystem -> URI -> Share or test-only LocalSave
+(SAF). Write raw Blob bytes in <=256 KiB slices, Base64 encode each slice, await
+writeFile then serial appendFile without encoding. Verify raw byte count/stat;
+Timer uses partial -> stat -> rename -> URI while ordinary files use the prior
+direct target. Preserve original per-module DOCUMENTS/CACHE folder. Do not
+decode entire Blob as text, build whole-file Base64, or share partial files.
+INPUT: JSON can be carried in .json/.txt/.md only if the ENTIRE contents parse
+as JSON (remove only one leading BOM); original module parser/validator commits
+or rejects. Genuine Markdown reports (especially Judge) have independent
+report import paths; no code-fence extraction or LLM JSON repair.
+FILE MATRIX: JSON/MD/TXT/HTML/CSV/SVG keep actual bytes/MIME; XLSX, JPG,
+PNG/audio/other binary MUST keep real bytes and extensions, never TXT aliases.
+No new PDF/ZIP generators are implied; existing HTML preview/print is separate.
+LARGE TIMER: ordinary format <=5 MiB; portable JSON <=96 MiB; display-image
+library single image <=80 MiB and total <=256 MiB is a different data domain.
+8 MiB selects Timer's dedicated large-file *import parser*, not an export cap.
+Android Chromium browser Web Share currently gates files over 50 MiB to the
+normal download action; this is NOT a Timer generation/import limit. Never
+change MATCH/FORMAT, clocks, sounds, media inclusion semantics, canvas or
+explicit settings application in an I/O change.
+FAILURES: One prepared file, one user intent, one Receipt. Cancelled share or SAF
+save must not report success or cause a second action. No global a.click/Blob/
+JSON.parse intercepts, duplicate delivery services, extra schema engine,
+persistent file cache, external file dependency, or Recorder coupling.
+MAINTENANCE: When changing a service interface, edit this comment; when a
+module exception changes, edit its FILE_IO_ADAPTER comment near the real code.
+Real execution code and current project rules outrank stale comments/line IDs.
+COACH_FILE_IO_ARCHITECTURE_CONTRACT_END
+*/
+function createCoachFileIO(environment) {
+  'use strict';
+  const host=environment||window;
+  const held=new Map();
+  let sequence=0;
+  const BUCKET=256*1024;
+  const allowed=new Set(['download','share','save-local']);
+  const isNative=()=>{
+    try {return !!(host.Capacitor&&host.Capacitor.isNativePlatform&&host.Capacitor.isNativePlatform());}
+    catch(_) {return false;}
+  };
+  const lang=file=>file.lang==='en'?'en':'zh';
+  const say=(file,zh,en)=>lang(file)==='en'?en:zh;
+  const filename=str=>String(str||'Export').replace(/[\\/:*?"<>|\u0000-\u001f]/g,'-').trim()||'Export';
+  const mimeOf=(file)=>String(file.mime||file.blob?.type||'application/octet-stream');
+  const kindOf=file=>{
+    if(file.kind&&file.kind!=='ordinary'&&file.kind!=='timer')return file.kind;
+    const ext=String(file.name).toLowerCase().split('.').pop();
+    return ({json:'json',md:'markdown',txt:'text',html:'html',htm:'html',
+      csv:'csv',svg:'svg',png:'image',jpg:'image',jpeg:'image',xlsx:'binary'})[ext]||'binary';
+  };
+  function prepare(input) {
+    if(!input||!input.blob||typeof input.blob.slice!=='function'||!Number.isFinite(input.blob.size))
+      throw Error('A prepared Blob is required');
+    return {...input,name:filename(input.name),mime:mimeOf(input),kind:kindOf(input)};
+  }
+  function receipt(file,status,method,extra) {
+    return Object.freeze({status,method,originalName:file.name,bytes:file.blob.size,...(extra||{})});
+  }
+  function message(r,file){
+    const en=lang(file)==='en';
+    const labels={
+      'download-started':en?'Download started; check your downloads folder.':'已发起下载，请检查下载目录。',
+      'preview-open-started':en?'Preview opening was requested.':'已发起预览，请检查新窗口。',
+      'share-returned':en?'System share returned; verify the destination file.':'系统分享流程已返回，请确认目标应用中的文件。',
+      saved:en?'File saved to the selected location.':'文件已保存到选择的位置。',
+      cancelled:en?'Action cancelled; no download was started.':'已取消，未自动下载。',
+      'share-not-completed':en?'System share did not complete; no download was started.':'系统分享未完成，未自动下载。',
+      unsupported:en?'This action is unsupported; select Download.':'当前环境不支持该操作，请选择下载。',
+      failed:en?'File operation failed; retry explicitly.':'文件操作失败，请自行选择重试。'
+    };
+    return labels[r.status]||r.message||'';
+  }
+  function capability(file){
+    const native=isNative(),nav=host.navigator||{},mobile=/Android|iPhone|iPad|iPod/i.test(String(nav.userAgent||''))||
+      (/Macintosh/i.test(String(nav.userAgent||''))&&Number(nav.maxTouchPoints||0)>1);
+    const androidWeb=!native&&/Android/i.test(String(nav.userAgent||''));
+    let share=!!(native&&host.Capacitor?.Plugins?.Share?.share);
+    if(!native&&mobile&&host.isSecureContext!==false&&typeof nav.share==='function'&&
+       typeof nav.canShare==='function'&&typeof host.File==='function'&&
+       (!androidWeb||file.blob.size<=50*1024*1024)){
+      try {
+        const type=(androidWeb&&['json','markdown'].includes(file.kind))?'text/plain':file.mime;
+        const name=(androidWeb&&['json','markdown'].includes(file.kind))?file.name+'.txt':file.name;
+        share=!!nav.canShare({files:[new host.File([file.blob],name,{type})]});
+        if(!share&&!androidWeb&&['json','markdown'].includes(file.kind))
+          share=!!nav.canShare({files:[new host.File([file.blob],file.name,{type:'text/plain'})]});
+      }catch(_) {share=false;}
+    }
+    const local=!!(native&&host.Capacitor?.Plugins?.LocalSave?.saveDocument);
+    return {native,mobile,androidWeb,share,local};
+  }
+  function webDownload(file){
+    let url=null,link=null;
+    try{
+      url=host.URL.createObjectURL(file.blob);
+      link=host.document.createElement('a');
+      link.href=url;link.download=file.name;link.style.cssText='position:fixed;top:-9999px;left:0';
+      (host.document.body||host.document.documentElement).appendChild(link);
+      link.click();
+      return receipt(file,'download-started','browser-download');
+    }catch(e){return receipt(file,'failed','browser-download',{errorName:e.name,message:String(e.message||e)});}
+    finally{
+      if(url||link)host.setTimeout(()=>{
+        try{link?.remove();}catch(_){}try{if(url)host.URL.revokeObjectURL(url);}catch(_){}
+      },30000);
+    }
+  }
+  // Called from a fresh click; call navigator.share before any await.
+  function webShare(file,cap){
+    const nav=host.navigator;
+    if(!cap.share)return Promise.resolve(receipt(file,'unsupported','web-share'));
+    try{
+      const androidTxt=cap.androidWeb&&['json','markdown'].includes(file.kind);
+      let name=androidTxt?file.name+'.txt':file.name;
+      let type=androidTxt?'text/plain':file.mime;
+      let shareFile=new host.File([file.blob],name,{type});
+      if(!nav.canShare({files:[shareFile]})&&!androidTxt&&['json','markdown'].includes(file.kind)){
+        type='text/plain';
+        shareFile=new host.File([file.blob],name,{type});
+      }
+      if(!nav.canShare({files:[shareFile]}))return Promise.resolve(receipt(file,'unsupported','web-share'));
+      const pending=nav.share({files:[shareFile]}); // files-only: iOS contract
+      return Promise.resolve(pending).then(
+        ()=>receipt(file,'share-returned','web-share',{deliveredName:name}),
+        e=>receipt(file,e?.name==='AbortError'?'share-not-completed':'failed','web-share',
+          {errorName:e?.name||'Error',message:String(e?.message||e),deliveredName:name}));
+    }catch(e){return Promise.resolve(receipt(file,'failed','web-share',{errorName:e.name,message:String(e.message||e)}));}
+  }
+  function encode64(array){
+    let binary='';
+    for(let i=0;i<array.length;i+=8192)
+      binary+=String.fromCharCode.apply(null,array.subarray(i,i+8192));
+    return host.btoa(binary);
+  }
+  async function writeNativeBlob(file,session){
+    const C=host.Capacitor,FS=C?.Plugins?.Filesystem;
+    if(!FS||typeof FS.writeFile!=='function'||typeof FS.appendFile!=='function'||
+       typeof FS.stat!=='function'||typeof FS.getUri!=='function')
+      throw Error('Native Filesystem byte operations unavailable');
+    const loc=file.nativeLocation;
+    if(!loc||!['DOCUMENTS','CACHE'].includes(String(loc.directory))||
+       !loc.folder||!/^[-\w/]+$/.test(loc.folder))
+      throw Error('Missing audited nativeLocation');
+    const dir=loc.directory,final=loc.folder.replace(/\/+$/,'')+'/'+file.name;
+    const key=dir+':'+final;
+    const occupant=held.get(key);
+    if(occupant&&occupant!==session)throw Error('This file is being delivered by another session');
+    held.set(key,session);
+    session.pathKey=key;
+    if(session.artifact)return session.artifact;
+    const timer=file.profile==='timer',tmp=timer?final+'.partial-'+(++sequence).toString(36):final;
+    let written=0;
+    try{
+      if(timer&&typeof FS.rename!=='function')throw Error('Timer rename unavailable');
+      if(file.blob.size===0){
+        await FS.writeFile({path:tmp,data:'',directory:dir,recursive:true});
+      }else{
+        for(let off=0;off<file.blob.size;off+=BUCKET){
+          const buf=new Uint8Array(await file.blob.slice(off,Math.min(file.blob.size,off+BUCKET)).arrayBuffer());
+          const data=encode64(buf);
+          if(off===0)await FS.writeFile({path:tmp,data,directory:dir,recursive:true});
+          else await FS.appendFile({path:tmp,data,directory:dir});
+          written+=buf.byteLength;
+        }
+      }
+      if(written!==file.blob.size)throw Error('Native chunk size mismatch');
+      const stat=await FS.stat({path:tmp,directory:dir});
+      if(Number(stat?.size)!==file.blob.size)throw Error('Native stored bytes mismatch');
+      if(timer)await FS.rename({from:tmp,to:final,directory:dir,toDirectory:dir});
+      const uri=(await FS.getUri({path:final,directory:dir}))?.uri;
+      if(!uri)throw Error('Native file URI missing');
+      session.artifact={uri,bytes:written,path:final,directory:dir};
+      return session.artifact;
+    }catch(e){
+      if(timer)try{await FS.deleteFile({path:tmp,directory:dir});}catch(_){}
+      throw e;
+    }
+  }
+  async function deliver(input,intent='download',options={}){
+    let file;
+    try{file=prepare(input);}catch(e){return {status:'failed',method:'prepare',message:String(e.message||e),bytes:0};}
+    if(!allowed.has(intent))return receipt(file,'unsupported','unknown-intent');
+    const cap=capability(file);
+    if(!cap.native){
+      if(intent==='download')return webDownload(file);
+      if(intent==='share')return webShare(file,cap);
+      return receipt(file,'unsupported','web-save-location');
+    }
+    if(intent==='download')return receipt(file,'unsupported','native-download');
+    if(intent==='share'&&!cap.share||intent==='save-local'&&!cap.local)
+      return receipt(file,'unsupported','native-plugin');
+    const session=options.session||{pathKey:null,artifact:null};
+    const own=!options.session;
+    try{
+      const artifact=await writeNativeBlob(file,session);
+      if(intent==='share'){
+        try{
+          await host.Capacitor.Plugins.Share.share({files:[artifact.uri]});
+          return receipt(file,'share-returned','native-share',
+            {nativeFileWritten:true,nativeUri:artifact.uri});
+        }catch(e){return receipt(file,e?.name==='AbortError'?'share-not-completed':'failed','native-share',
+          {nativeFileWritten:true,nativeUri:artifact.uri,errorName:e?.name,message:String(e?.message||e)});}
+      }
+      try{
+        const data=await host.Capacitor.Plugins.LocalSave.saveDocument({
+          sourceUri:artifact.uri,name:file.name,mimeType:file.mime});
+        if(data?.canceled||data?.cancelled)return receipt(file,'cancelled','native-local-save',
+          {nativeFileWritten:true,nativeUri:artifact.uri});
+        if(data?.saved&&Number(data.bytes)===file.blob.size)
+          return receipt(file,'saved','native-local-save',{nativeFileWritten:true,nativeUri:artifact.uri});
+        throw Error('Local save did not confirm byte-complete closed stream');
+      }catch(e){return receipt(file,e?.name==='AbortError'?'cancelled':'failed','native-local-save',
+        {nativeFileWritten:true,nativeUri:artifact.uri,errorName:e?.name,message:String(e?.message||e)});}
+    }catch(e){return receipt(file,'failed','native-write',{errorName:e?.name,message:String(e?.message||e)});}
+    finally{if(own&&session.pathKey)held.delete(session.pathKey);}
+  }
+  function present(input,options={}){
+    let file;
+    try{file=prepare(input);}catch(e){return Promise.resolve({status:'failed',method:'prepare',message:String(e.message||e)});}
+    const cap=capability(file);
+    if(!cap.mobile&&!cap.native)return deliver(file,'download');
+    const doc=host.document;
+    if(!doc||!doc.body)return deliver(file,cap.native?'share':'download');
+    return new Promise(resolve=>{
+      const session={pathKey:null,artifact:null};
+      const layer=doc.createElement('div');
+      layer.style.cssText='position:fixed;inset:0;z-index:2147483646;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;padding:16px';
+      const box=doc.createElement('div');
+      // FILE_IO_ADAPTER: delivery dialog --surface is translucent; choose opaque theme tokens instead.
+      box.style.cssText='background:var(--bg1,#fff);color:var(--ink,#222);border-radius:14px;padding:20px;max-width:440px;width:100%;box-shadow:0 20px 60px #0004;display:grid;gap:10px;font:14px/1.5 system-ui,sans-serif';
+      const head=doc.createElement('div');head.textContent=say(file,'文件已准备好，请选择交付方式','File ready. Choose a delivery method.');
+      head.style.cssText='font-size:17px;font-weight:700';
+      const detail=doc.createElement('div');detail.textContent=file.name+' ('+file.blob.size+' bytes)';
+      detail.style.cssText='overflow-wrap:anywhere;font-size:12px;opacity:.75';
+      const info=doc.createElement('div');info.setAttribute('role','status');info.style.cssText='font-size:13px;min-height:20px;overflow-wrap:anywhere';
+      box.append(head,detail);
+      let active=false,closed=false,last=null;
+      const buttons=[];
+      function finish(){
+        if(closed)return;
+        if(active)return;
+        closed=true;layer.remove();
+        if(session.pathKey)held.delete(session.pathKey);
+        resolve(last||receipt(file,'cancelled','dialog'));
+      }
+      function add(label,intent){
+        const btn=doc.createElement('button');
+        btn.type='button';btn.textContent=label;btn.style.cssText='padding:11px;border:1px solid #aaa;border-radius:8px;background:var(--bg0,#f4f6fb);color:inherit;cursor:pointer;font:inherit';
+        btn.addEventListener('click',()=>{
+          if(intent==='close'){finish();return;}
+          if(active)return;active=true;for(const b of buttons)b.disabled=true;
+          // Call deliver immediately under user activation, before any await.
+          Promise.resolve(deliver(file,intent,{session})).then(r=>{
+            last=r;info.textContent=message(r,file)+(r.deliveredName&&r.deliveredName!==file.name?' '+r.deliveredName:'');
+            if(typeof options.onReceipt==='function')try{options.onReceipt(r);}catch(_){}
+          }).catch(e=>{last=receipt(file,'failed',intent,{message:String(e?.message||e)});info.textContent=message(last,file);})
+            .finally(()=>{active=false;for(const b of buttons)b.disabled=false;});
+        });
+        box.appendChild(btn);buttons.push(btn);return btn;
+      }
+      if(!cap.native)add(say(file,'下载原文件','Download original file'),'download');
+      if(cap.share)add(say(file,cap.androidWeb&&['json','markdown'].includes(file.kind)?'分享TXT兼容副本':'分享文件','Share file'),'share');
+      if(cap.local)add(say(file,'另存为（选择文件位置）','Save as (choose location)'),'save-local');
+      add(say(file,'完成 / 取消','Done / Cancel'),'close');
+      box.appendChild(info);layer.appendChild(box);doc.body.appendChild(layer);
+      layer.addEventListener('click',e=>{if(e.target===layer)finish();});
+    });
+  }
+  function openPreview(input) {
+    let file;try{file=prepare(input);}catch(e){return {status:'failed',method:'preview',message:String(e.message||e)};}
+    try{
+      const url=host.URL.createObjectURL(file.blob);
+      const w=host.open(url,'_blank');
+      host.setTimeout(()=>{try{host.URL.revokeObjectURL(url);}catch(_){}},30000);
+      return receipt(file,w?'preview-open-started':'failed','web-preview');
+    }catch(e){return receipt(file,'failed','web-preview',{message:String(e.message||e)});}
+  }
+  function standaloneSource(){
+    return '(function(){window.DCFileIO=('+createCoachFileIO.toString()+')(window);})();';
+  }
+  return Object.freeze({present,deliver,openPreview,standaloneSource,message,capability,
+    readJsonText:text=>JSON.parse(String(text).replace(/^\uFEFF/,''))});
+}
+
+if(window.Capacitor?.isNativePlatform?.()&&typeof window.Capacitor.registerPlugin==="function") window.Capacitor.registerPlugin("LocalSave");
+window.DCFileIO=createCoachFileIO(window);
+</script>
 </head>
 <body>
 <script>if(localStorage.getItem("debate_coach_theme")==="dark")document.body.classList.add("dark");</script>
@@ -442,7 +754,7 @@ window.__TBX={P:P,A:A,F:F,emit:emit,read:read,tokens:tokens,tokensFor:tokensFor,
 
 <div id="modalBack" class="modal-back hidden"></div>
 <div id="toast"></div>
-<input type="file" id="fileImport" accept=".json,application/json" class="hidden" onchange="importJSON(event)">
+<input type="file" id="fileImport" accept=".json,.txt,.md,application/json,text/plain,text/markdown" class="hidden" onchange="importJSON(event)">
 
 <script>
 /* ================= 配置 ================= */
@@ -2996,8 +3308,9 @@ function boardExportAll(){
 /* ================= 文件导入导出 ================= */
 function cloneBoard(b){return JSON.parse(JSON.stringify(b));}
 function sanitize(n){return String(n||(lang==='en'?'Board':'战术板')).replace(/[\\/:*?"<>|]/g,'_');}
+/* FILE_IO_ADAPTER: standalone tactical board; original data, IDs and save remain authoritative. */
 function download(text,name,mime){
-  smartDownload(text instanceof Blob?text:new Blob([text],{type:mime}),name,mime,typeof text==='string'?text:null);
+  return smartDownload(text instanceof Blob?text:new Blob([text],{type:mime}),name,mime,typeof text==="string"?text:null);
 }
 function isMobileUA(){
   if(window.__forceMobile!==undefined)return !!window.__forceMobile;
@@ -3021,75 +3334,25 @@ function copyTextFallback(text){
   }catch(e){}
 }
 async function smartDownload(blob,name,mime,text){
-  // 1) Capacitor 原生应用：Filesystem 写入应用文档目录 + Share 分享（与 debate-coach-web 一致）
-  if(window.Capacitor&&window.Capacitor.Plugins&&window.Capacitor.Plugins.Filesystem){
-    try{
-      var C=window.Capacitor;
-      var FS=C.Plugins.Filesystem;
-      var Dir=(C.Plugins.Directory&&C.Plugins.Directory.Documents)?C.Plugins.Directory.Documents:'DOCUMENTS';
-      var Enc=(C.Plugins.Encoding&&C.Plugins.Encoding.UTF8)?C.Plugins.Encoding.UTF8:'utf8';
-      var folder='Debate-Coach';
-      var isText=mime&&(mime.indexOf('text/')===0||mime.indexOf('json')>=0||mime.indexOf('html')>=0);
-      var opts={path:folder+'/'+name,directory:Dir,recursive:true};
-      if(isText){
-        opts.data=await blob.text();
-        opts.encoding=Enc;
-      }else{
-        opts.data=await new Promise(function(resolve){
-          var reader=new FileReader();
-          reader.onload=function(){resolve(String(reader.result).split(',')[1]);};
-          reader.readAsDataURL(blob);
-        });
-      }
-      var result=await FS.writeFile(opts);
-      var Share=C.Plugins.Share;
-      if(Share&&Share.share){
-        try{
-          await Share.share({title:t('exportShareTitle'),text:t('exportShareText'),files:[result.uri]});
-          return;
-        }catch(se){}
-      }
-      toast(t('capSaved')+'Debate-Coach/'+name);
-      return;
-    }catch(e){console.warn('Capacitor export failed: '+e.message);}
-  }
-  // 2) 移动端浏览器：系统分享优先
-  var iOS=/iPhone|iPad|iPod/i.test(navigator.userAgent);
-  var file=null;
-  try{file=new File([blob],name,{type:mime});}catch(e){}
-  var canShare=!!(file&&navigator.share&&navigator.canShare&&navigator.canShare({files:[file]}));
-  if(isMobileUA()&&canShare){
-    navigator.share({files:[file],title:name}).then(function(){
-      // 原生分享成功（用户选择了保存/发送目标）
-    },function(){
-      // 用户取消或分享失败 -> 下载兜底；iOS 文本类再给剪贴板兜底
-      anchorClick(blob,name,mime);
-      if(iOS&&(mime.indexOf('text/')===0||mime.indexOf('json')>=0))copyTextFallback(text);
-    });
-    return;
-  }
-  // 3) 桌面/兜底：直接下载
-  anchorClick(blob,name,mime);
-  if(iOS&&(mime.indexOf('text/')===0||mime.indexOf('json')>=0))copyTextFallback(text);
+  return window.DCFileIO.present({blob,name,mime:mime||blob.type,owner:"board",kind:"json",
+    nativeLocation:{directory:"DOCUMENTS",folder:"Debate-Coach"}});
 }
 function importJSON(ev){
   var f=ev.target.files[0];if(!f)return;
   var rd=new FileReader();
   rd.onload=function(){
     try{
-      var d=JSON.parse(rd.result);
+      var d=JSON.parse(String(rd.result).replace(/^\uFEFF/,""));
       var list=[];
       if(d&&d.app==='Debate-Board'&&d.board)list.push(d.board);
       else if(d&&Array.isArray(d.boards))list=d.boards;
       else if(d&&Array.isArray(d.cards))list.push(d);
       else{toast(t('importBad'));return;}
-      var added=0;
-      list.forEach(function(b){
-        var nb=remapBoard(b);
-        if(nb){store.boards.push(nb);added++;}
-      });
-      if(added){save();setActive(store.boards[store.boards.length-1].id);closeModal();toast(t('imported')+added+t('imported2'));}
-      else toast(t('importFail'));
+      var prepared=list.map(function(b){return remapBoard(b);}).filter(Boolean);
+      if(!prepared.length){toast(t("importFail"));return;}
+      store.boards.push.apply(store.boards,prepared);
+      save();setActive(store.boards[store.boards.length-1].id);closeModal();
+      toast(t("imported")+prepared.length+t("imported2"));
     }catch(err){toast(t('importErr'));}
   };
   rd.readAsText(f);
